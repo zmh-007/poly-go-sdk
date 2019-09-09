@@ -358,13 +358,12 @@ func (this *MultiChainSdk) GetPrivateKeyFromMnemonicCodesStrBip44(mnemonicCodesS
 }
 
 //NewInvokeTransaction return smart contract invoke transaction
-func (this *MultiChainSdk) NewInvokeTransaction(gasPrice, gasLimit uint64, invokeCode []byte) *types.MutableTransaction {
+func (this *MultiChainSdk) NewInvokeTransaction( invokeCode []byte) *types.Transaction {
 	invokePayload := &payload.InvokeCode{
 		Code: invokeCode,
 	}
-	tx := &types.MutableTransaction{
-		GasPrice: gasPrice,
-		GasLimit: gasLimit,
+	tx := &types.Transaction{
+
 		TxType:   types.Invoke,
 		Nonce:    rand.Uint32(),
 		Payload:  invokePayload,
@@ -539,3 +538,4 @@ func (this *MultiChainSdk) GetAdddrByPubKey(pubKey keypair.PublicKey) string {
 	address := types.AddressFromPubKey(pubKey)
 	return address.ToBase58()
 }
+
