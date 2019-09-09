@@ -23,8 +23,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/ontio/ontology/common"
-	"github.com/ontio/ontology/core/payload"
+	"github.com/ontio/multi-chain/common"
+	"github.com/ontio/multi-chain/core/payload"
 	"math/big"
 )
 

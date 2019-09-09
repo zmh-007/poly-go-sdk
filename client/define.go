@@ -2,7 +2,7 @@ package client
 
 import (
 	"encoding/json"
-	"github.com/ontio/ontology/core/types"
+	"github.com/ontio/multi-chain/core/types"
 	"time"
 )
 

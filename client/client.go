@@ -3,10 +3,10 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-	sdkcom "github.com/ontio/ontology-go-sdk/common"
-	"github.com/ontio/ontology-go-sdk/utils"
-	"github.com/ontio/ontology/common"
-	"github.com/ontio/ontology/core/types"
+	sdkcom "github.com/ontio/multi-chain-go-sdk/common"
+	"github.com/ontio/multi-chain-go-sdk/utils"
+	"github.com/ontio/multi-chain/common"
+	"github.com/ontio/multi-chain/core/types"
 	"sync/atomic"
 	"time"
 )
