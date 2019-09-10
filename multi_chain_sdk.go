@@ -372,7 +372,7 @@ func (this *MultiChainSdk) NewInvokeTransaction( invokeCode []byte) *types.Trans
 	return tx
 }
 
-func (this *MultiChainSdk) SignToTransaction(tx *types.MutableTransaction, signer Signer) error {
+func (this *MultiChainSdk) SignToTransaction(tx *types.Transaction, signer Signer) error {
 	if tx.Payer == common.ADDRESS_EMPTY {
 		account, ok := signer.(*Account)
 		if ok {
