@@ -49,3 +49,34 @@ func TestVote(t *testing.T) {
 		fmt.Printf("marshal results struct to json is %+v\n", string(jsonResultBytes))
 	}
 }
+
+
+func TestRegisterSideChain(t *testing.T) {
+	sdk := ontology_go_sdk.NewMultiChainSdk()
+	pri, _ := oc.HexToBytes("5f2fe68215476abb9852cfa7da31ef00aa1468782d5ca809da5c4e1390b8ee45")
+	signer, _ := ontology_go_sdk.NewAccountFromPrivateKey(pri, signature.SHA256withECDSA)
+	//to, _ := oc.AddressFromBase58("ASUwFccvYFrrWR6vsZhhNszLFNvCLA5qS6")
+	sdk.NewWebSocketClient().Connect("ws://138.91.6.125:40335")
+
+	var address = "AQf4Mzu1YJrhz9f3aRkkwSm9n3qhXGSh4p"
+	//txHash1, _ := oc.HexToBytes("7575526bc066a3acc6abb134119cd6d4a9041969")
+
+	txHash, _ := sdk.Native.Scm.RegisterSideChain(address, 165, "chain165", 1, signer)
+	var results *common.SmartContactEvent
+	//results := &common.SmartContactEvent{}
+	err := errors.New("No result")
+	for {
+		results, err = sdk.GetSmartContractEvent(txHash.ToHexString())
+
+		if err == nil {
+			fmt.Printf("RegisterSideChain result is %+v \n ", results)
+			break
+		}
+	}
+	jsonResultBytes, e := json.Marshal(results)
+	if e !=  nil {
+		fmt.Printf("marshal results struct error : %+v", e)
+	} else {
+		fmt.Printf("marshal results struct to json is %+v\n", string(jsonResultBytes))
+	}
+}

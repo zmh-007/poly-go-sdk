@@ -34,7 +34,7 @@ type Wallet struct {
 	identityLabelMap map[string]*Identity
 	defIdentity      *Identity
 	path             string
-	ontSdk           *OntologySdk
+	ontSdk           *MultiChainSdk
 	lock             sync.RWMutex
 }
 

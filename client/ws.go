@@ -605,14 +605,14 @@ func (this *WSClient) getRawTransaction(qid, txHash string) ([]byte, error) {
 }
 
 func (this *WSClient) sendRawTransaction(qid string, tx *types.Transaction, isPreExec bool) ([]byte, error) {
-	//var buffer bytes.Buffer
-	//err := tx.Serialize(&buffer)
+
 	var sink *common.ZeroCopySink
 	err := tx.Serialization(sink)
 	if err != nil {
 		return nil, fmt.Errorf("serialize error:%s", err)
 	}
 	txData := hex.EncodeToString(sink.Bytes())
+
 	params := map[string]interface{}{"Data": txData}
 	if isPreExec {
 		params["PreExec"] = "1"

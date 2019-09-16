@@ -212,12 +212,24 @@ func (this *HeaderSync) NewSyncGenesisHeaderTransaction( genesisHeader []byte) (
 		sink.Bytes())
 }
 
-func (this *HeaderSync) SyncGenesisHeader(genesisHeader []byte, signer *Account) (common.Uint256, error) {
+func (this *HeaderSync) SyncGenesisHeader(genesisHeader []byte, signers []*Account) (common.Uint256, error) {
 	tx, err := this.NewSyncGenesisHeaderTransaction(genesisHeader)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
-	err = this.mcSdk.SignToTransaction(tx, signer)
+
+	pubKeys := make([]keypair.PublicKey, 0)
+	for _, acc := range signers {
+		pubKeys = append(pubKeys, acc.PublicKey)
+	}
+
+	for _, signer := range signers {
+		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
+		if err != nil {
+			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
+		}
+	}
+
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
@@ -423,12 +435,24 @@ func (this *SideChainManager) NewApproveUpdateSideChainTransaction(chainId uint6
 		scm.APPROVE_UPDATE_SIDE_CHAIN,
 		sink.Bytes())
 }
-func (this *SideChainManager) ApproveUpdateSideChain(chainId uint64, signer *Account) (common.Uint256, error)  {
+func (this *SideChainManager) ApproveUpdateSideChain(chainId uint64, signers []*Account) (common.Uint256, error)  {
 	tx, err := this.NewApproveUpdateSideChainTransaction(chainId)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
-	err = this.mcSdk.SignToTransaction(tx, signer)
+
+	pubKeys := make([]keypair.PublicKey, 0)
+	for _, acc := range signers {
+		pubKeys = append(pubKeys, acc.PublicKey)
+	}
+
+	for _, signer := range signers {
+		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
+		if err != nil {
+			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
+		}
+	}
+
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
@@ -526,13 +550,25 @@ func (this *SideChainManager) NewApproveAssetMappingTransaction(assetName string
 		sink.Bytes())
 }
 
-func (this *SideChainManager) ApproveAssetMapping(assetName string, signer *Account) (common.Uint256, error)  {
+func (this *SideChainManager) ApproveAssetMapping(assetName string, signers []*Account) (common.Uint256, error)  {
 	tx, err := this.NewApproveAssetMappingTransaction(assetName)
 
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
-	err = this.mcSdk.SignToTransaction(tx, signer)
+
+	pubKeys := make([]keypair.PublicKey, 0)
+	for _, acc := range signers {
+		pubKeys = append(pubKeys, acc.PublicKey)
+	}
+
+	for _, signer := range signers {
+		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
+		if err != nil {
+			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
+		}
+	}
+
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
