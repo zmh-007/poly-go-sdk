@@ -8,7 +8,8 @@ import (
 	"github.com/ontio/multi-chain/common"
 	"github.com/ontio/multi-chain/core/types"
 	nccmc "github.com/ontio/multi-chain/native/service/cross_chain_manager/common"
-	hc "github.com/ontio/multi-chain/native/service/header_sync"
+	hsc "github.com/ontio/multi-chain/native/service/header_sync/common"
+	hs "github.com/ontio/multi-chain/native/service/header_sync"
 	scm "github.com/ontio/multi-chain/native/service/side_chain_manager"
 	ccm "github.com/ontio/multi-chain/native/service/cross_chain_manager"
 	"github.com/ontio/multi-chain/native/states"
@@ -88,7 +89,7 @@ func (this *NativeContract) PreExecInvokeNativeContract(
 	contractAddress common.Address,
 	version byte,
 	method string,
-	params []interface{},
+	params []byte,
 ) (*sdkcom.PreExecResult, error) {
 	tx, err := this.NewNativeInvokeTransaction(version, contractAddress, method, params)
 	if err != nil {
@@ -124,10 +125,10 @@ func (this *CrossChainManager) NewVoteTransaction(fromChainId uint64, address st
 	}
 
 	sink := new(common.ZeroCopySink)
-	err := state.Serialization(sink)
-	if err != nil {
-		return nil, fmt.Errorf("Parameter Serilization error: %s", err)
-	}
+	state.Serialization(sink)
+	//if err != nil {
+	//	return nil, fmt.Errorf("Parameter Serilization error: %s", err)
+	//}
 
 	return this.native.NewNativeInvokeTransaction(
 		CROSS_CHAIN_MANAGER_CONTRACT_VERSION,
@@ -161,10 +162,10 @@ func (this *CrossChainManager) NewImportOuterTransferTransaction(sourceChainId u
 	}
 
 	sink := new(common.ZeroCopySink)
-	err := state.Serialization(sink)
-	if err != nil {
-		return nil, fmt.Errorf("Parameter Serilization error: %s", err)
-	}
+	state.Serialization(sink)
+	//if err != nil {
+	//	return nil, fmt.Errorf("Parameter Serilization error: %s", err)
+	//}
 
 	return this.native.NewNativeInvokeTransaction(
 		CROSS_CHAIN_MANAGER_CONTRACT_VERSION,
@@ -194,7 +195,7 @@ type HeaderSync struct {
 
 func (this *HeaderSync) NewSyncGenesisHeaderTransaction( genesisHeader []byte) (*types.Transaction, error) {
 
-	state := &hc.SyncGenesisHeaderParam{
+	state := &hsc.SyncGenesisHeaderParam{
 		GenesisHeader:  genesisHeader,
 	}
 
@@ -207,7 +208,7 @@ func (this *HeaderSync) NewSyncGenesisHeaderTransaction( genesisHeader []byte) (
 	return this.native.NewNativeInvokeTransaction(
 		HEADER_SYNC_CONTRACT_VERSION,
 		HeaderSyncContractAddress,
-		hc.SYNC_GENESIS_HEADER,
+		hs.SYNC_GENESIS_HEADER,
 		sink.Bytes())
 }
 
@@ -225,21 +226,21 @@ func (this *HeaderSync) SyncGenesisHeader(genesisHeader []byte, signer *Account)
 
 
 func (this *HeaderSync) NewSyncBlockHeaderTransaction(address common.Address, headers [][]byte) (*types.Transaction, error) {
-	state := &hc.SyncBlockHeaderParam{
+	state := &hsc.SyncBlockHeaderParam{
 		Address:  address,
 		Headers: headers,
 	}
 
 	sink := new(common.ZeroCopySink)
-	err := state.Serialization(sink)
-	if err != nil {
-		return nil, fmt.Errorf("Parameter Serilization error: %s", err)
-	}
+	state.Serialization(sink)
+	//if err != nil {
+	//	return nil, fmt.Errorf("Parameter Serilization error: %s", err)
+	//}
 
 	return this.native.NewNativeInvokeTransaction(
 		HEADER_SYNC_CONTRACT_VERSION,
 		HeaderSyncContractAddress,
-		hc.SYNC_BLOCK_HEADER,
+		hs.SYNC_BLOCK_HEADER,
 		sink.Bytes())
 }
 
@@ -255,28 +256,25 @@ func (this *HeaderSync) SyncBlockHeader(address common.Address, headers [][]byte
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *HeaderSync) NewSyncConsensusPeersTransaction(address common.Address, header []byte, proof string) (*types.Transaction, error) {
-	state := &hc.SyncConsensusPeerParam{
-		Address:  address,
-		Header: header,
-		Proof: proof,
+func (this *HeaderSync) NewSyncGenesisTransaction(chainId uint64, genesisHeader []byte) (*types.Transaction, error) {
+	state := &hsc.SyncGenesisHeaderParam{
+		ChainID: chainId,
+		GenesisHeader: genesisHeader,
 	}
 
 	sink := new(common.ZeroCopySink)
-	err := state.Serialization(sink)
-	if err != nil {
-		return &types.Transaction{}, fmt.Errorf("Parameter Serilization error: %s", err)
-	}
+	state.Serialization(sink)
+
 
 	return this.native.NewNativeInvokeTransaction(
 		HEADER_SYNC_CONTRACT_VERSION,
 		HeaderSyncContractAddress,
-		hc.SYNC_CONSENSUS_PEERS,
+		hs.SYNC_GENESIS_HEADER,
 		sink.Bytes())
 }
 
-func (this *HeaderSync) SyncConsensusPeers(address common.Address, header []byte, proof string, signer *Account) (common.Uint256, error) {
-	tx, err := this.NewSyncConsensusPeersTransaction(address, header, proof)
+func (this *HeaderSync) SyncGenesisPeers(chainId uint64, genesisHeader []byte, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewSyncGenesisTransaction(chainId, genesisHeader)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
@@ -487,7 +485,7 @@ func (this *SideChainManager) NewAssetMappingTransaction(address string, assetNa
 		scm.ASSET_MAP,
 		sink.Bytes())
 }
-func (this *SideChainManager) AssetMapping(address string, assetName string, assetList []*scm.Asset, signers []*Account, int m) (common.Uint256, error)  {
+func (this *SideChainManager) AssetMapping(address string, assetName string, assetList []*scm.Asset, signers []*Account) (common.Uint256, error)  {
 	tx, err := this.NewAssetMappingTransaction(address, assetName, assetList)
 	if err != nil {
 		return common.UINT256_EMPTY, err
