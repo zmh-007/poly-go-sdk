@@ -684,7 +684,7 @@ func (this *WSClient) GetActionCh() chan *WSAction {
 func (this *WSClient) sendAsyncRawTransaction(qid string, tx *types.Transaction, isPreExec bool) (*WSRequest, error) {
 	//var buffer bytes.Buffer
 	//err := tx.Serialize(&buffer)
-	var sink *common.ZeroCopySink
+	var sink = new(common.ZeroCopySink)
 	err := tx.Serialization(sink)
 	if err != nil {
 		return nil, fmt.Errorf("serialize error:%s", err)
