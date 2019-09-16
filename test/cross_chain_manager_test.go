@@ -62,7 +62,7 @@ func TestRegisterSideChain(t *testing.T) {
 	var address = "AQf4Mzu1YJrhz9f3aRkkwSm9n3qhXGSh4p"
 	//txHash1, _ := oc.HexToBytes("7575526bc066a3acc6abb134119cd6d4a9041969")
 
-	txHash, err := sdk.Native.Scm.RegisterSideChain(address, 173, "chain167", 1, signer)
+	txHash, err := sdk.Native.Scm.RegisterSideChain(address, 234, "chain167", 1, signer)
 
 	var results *common.SmartContactEvent
 	//results := &common.SmartContactEvent{}
