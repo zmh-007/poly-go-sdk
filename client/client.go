@@ -224,7 +224,7 @@ func (this *ClientMgr) GetMerkleProof(txHash string) (*sdkcom.MerkleProof, error
 	return utils.GetMerkleProof(data)
 }
 
-func (this *ClientMgr) GetCrossStatesProof(height uint32, key string) (*sdkcom.MerkleProof, error) {
+func (this *ClientMgr) GetCrossStatesProof(height uint32, key string) (*sdkcom.CrossStatesProof, error) {
 	client := this.getClient()
 	if client == nil {
 		return nil, fmt.Errorf("don't have available client of ontology")
@@ -233,7 +233,7 @@ func (this *ClientMgr) GetCrossStatesProof(height uint32, key string) (*sdkcom.M
 	if err != nil {
 		return nil, err
 	}
-	return utils.GetMerkleProof(data)
+	return utils.GetCrossStatesProof(data)
 }
 
 func (this *ClientMgr) GetMemPoolTxState(txHash string) (*sdkcom.MemPoolTxState, error) {

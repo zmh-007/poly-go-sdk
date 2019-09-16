@@ -174,6 +174,15 @@ func GetMerkleProof(data []byte) (*sdkcom.MerkleProof, error) {
 	return proof, nil
 }
 
+func GetCrossStatesProof(data []byte) (*sdkcom.CrossStatesProof, error) {
+	proof := &sdkcom.CrossStatesProof{}
+	err := json.Unmarshal(data, proof)
+	if err != nil {
+		return nil, fmt.Errorf("GetCrossStatesProof json.Unmarshal error:%s", err)
+	}
+	return proof, nil
+}
+
 func GetBlockTxHashes(data []byte) (*sdkcom.BlockTxHashes, error) {
 	blockTxHashesStr := &sdkcom.BlockTxHashesStr{}
 	err := json.Unmarshal(data, &blockTxHashesStr)
