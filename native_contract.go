@@ -509,22 +509,15 @@ func (this *SideChainManager) NewAssetMappingTransaction(address string, assetNa
 		scm.ASSET_MAP,
 		sink.Bytes())
 }
-func (this *SideChainManager) AssetMapping(address string, assetName string, assetList []*scm.Asset, signers []*Account) (common.Uint256, error)  {
+func (this *SideChainManager) AssetMapping(address string, assetName string, assetList []*scm.Asset, signer *Account) (common.Uint256, error)  {
 	tx, err := this.NewAssetMappingTransaction(address, assetName, assetList)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
 
-	pubKeys := make([]keypair.PublicKey, 0)
-	for _, acc := range signers {
-		pubKeys = append(pubKeys, acc.PublicKey)
-	}
-
-	for _, signer := range signers {
-		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
-		if err != nil {
-			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
-		}
+	err = this.mcSdk.SignToTransaction(tx, signer)
+	if err != nil {
+		return common.UINT256_EMPTY, err
 	}
 
 	if err != nil {
