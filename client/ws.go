@@ -612,7 +612,7 @@ func (this *WSClient) sendRawTransaction(qid string, tx *types.Transaction, isPr
 		return nil, fmt.Errorf("serialize error:%s", err)
 	}
 	txData := hex.EncodeToString(sink.Bytes())
-
+	fmt.Printf("txData is %+v\n", txData)
 	params := map[string]interface{}{"Data": txData}
 	if isPreExec {
 		params["PreExec"] = "1"

@@ -344,17 +344,22 @@ func (this *ClientMgr) WaitForGenerateBlock(timeout time.Duration, blockCount ..
 
 func (this *ClientMgr) getClient() OntologyClient {
 	if this.defClient != nil {
+		//fmt.Printf("defClient")
 		return this.defClient
 	}
 	if this.rpc != nil {
+		//fmt.Printf("rpcClient")
 		return this.rpc
 	}
 	if this.rest != nil {
+		//fmt.Printf("restClient")
 		return this.rest
 	}
 	if this.ws != nil {
+		//fmt.Printf("wsClient")
 		return this.ws
 	}
+	//fmt.Printf("No client")
 	return nil
 }
 
