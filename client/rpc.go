@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"github.com/ontio/multi-chain-go-sdk/utils"
 	"github.com/ontio/multi-chain/core/types"
+	"github.com/ontio/multi-chain/common"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -145,6 +146,10 @@ func (this *RpcClient) getMerkleProof(qid, txHash string) ([]byte, error) {
 	return this.sendRpcRequest(qid, RPC_GET_MERKLE_PROOF, []interface{}{txHash})
 }
 
+func (this *RpcClient) getCrossStatesProof(qid string, height uint32, key string) ([]byte, error) {
+	return this.sendRpcRequest(qid, RPC_GET_CROSS_STATES_PROOF, []interface{}{height, key})
+}
+
 func (this *RpcClient) getMemPoolTxState(qid, txHash string) ([]byte, error) {
 	return this.sendRpcRequest(qid, RPC_GET_MEM_POOL_TX_STATE, []interface{}{txHash})
 }
@@ -162,12 +167,14 @@ func (this *RpcClient) getBlockTxHashesByHeight(qid string, height uint32) ([]by
 }
 
 func (this *RpcClient) sendRawTransaction(qid string, tx *types.Transaction, isPreExec bool) ([]byte, error) {
-	var buffer bytes.Buffer
-	err := tx.Serialize(&buffer)
+	//var buffer bytes.Buffer
+	//err := tx.Serialize(&buffer)
+	var sink *common.ZeroCopySink
+	err := tx.Serialization(sink)
 	if err != nil {
 		return nil, fmt.Errorf("serialize error:%s", err)
 	}
-	txData := hex.EncodeToString(buffer.Bytes())
+	txData := hex.EncodeToString(sink.Bytes())
 	params := []interface{}{txData}
 	if isPreExec {
 		params = append(params, 1)

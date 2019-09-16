@@ -30,6 +30,7 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"github.com/ontio/multi-chain/common"
 )
 
 //RpcClient for ontology rpc api
@@ -154,6 +155,10 @@ func (this RestClient) getMerkleProof(qid, txHash string) ([]byte, error) {
 	return this.sendRestGetRequest(reqPath)
 }
 
+func (this RestClient) getCrossStatesProof(qid string, height uint32, key string) ([]byte, error) {
+	return nil, fmt.Errorf("Does not support GetCrossStatesProof for websocket")
+}
+
 func (this *RestClient) getMemPoolTxState(qid, txHash string) ([]byte, error) {
 	reqPath := GET_MEMPOOL_TXSTATE + txHash
 	return this.sendRestGetRequest(reqPath)
@@ -176,8 +181,8 @@ func (this *RestClient) getBlockTxHashesByHeight(qid string, height uint32) ([]b
 
 func (this *RestClient) sendRawTransaction(qid string, tx *types.Transaction, isPreExec bool) ([]byte, error) {
 	reqPath := POST_RAW_TX
-	var buffer bytes.Buffer
-	err := tx.Serialize(&buffer)
+	var sink *common.ZeroCopySink
+	err := tx.Serialization(sink)
 	if err != nil {
 		return nil, fmt.Errorf("Serialize error:%s", err)
 	}
@@ -186,7 +191,7 @@ func (this *RestClient) sendRawTransaction(qid string, tx *types.Transaction, is
 		reqValues = &url.Values{}
 		reqValues.Add("preExec", "1")
 	}
-	return this.sendRestPostRequest(buffer.Bytes(), reqPath, reqValues)
+	return this.sendRestPostRequest(sink.Bytes(), reqPath, reqValues)
 }
 
 func (this *RestClient) getAddress() (string, error) {

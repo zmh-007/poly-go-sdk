@@ -25,10 +25,8 @@ import (
 	"github.com/ontio/multi-chain/common"
 	"github.com/ontio/multi-chain/core/signature"
 	"github.com/ontio/multi-chain/core/types"
-	nvutils "github.com/ontio/multi-chain/smartcontract/service/native/utils"
 	"os"
 	"sort"
-	"strings"
 )
 
 func TransactionFromHexString(rawTx string) (*types.Transaction, error) {
@@ -67,18 +65,18 @@ func GetContractAddress(contractCode string) (common.Address, error) {
 	return common.AddressFromVmCode(code), nil
 }
 
-func GetAssetAddress(asset string) (common.Address, error) {
-	var contractAddress common.Address
-	switch strings.ToUpper(asset) {
-	case "ONT":
-		contractAddress = nvutils.OntContractAddress
-	case "ONG":
-		contractAddress = nvutils.OngContractAddress
-	default:
-		return common.ADDRESS_EMPTY, fmt.Errorf("asset:%s not equal ont or ong", asset)
-	}
-	return contractAddress, nil
-}
+//func GetAssetAddress(asset string) (common.Address, error) {
+//	var contractAddress common.Address
+//	switch strings.ToUpper(asset) {
+//	case "ONT":
+//		contractAddress = nvutils.OntContractAddress
+//	case "ONG":
+//		contractAddress = nvutils.OngContractAddress
+//	default:
+//		return common.ADDRESS_EMPTY, fmt.Errorf("asset:%s not equal ont or ong", asset)
+//	}
+//	return contractAddress, nil
+//}
 
 //IsFileExist return is file is exist
 func IsFileExist(file string) bool {

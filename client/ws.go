@@ -18,13 +18,13 @@
 package client
 
 import (
-	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	sdkcom "github.com/ontio/multi-chain-go-sdk/common"
 	"github.com/ontio/multi-chain-go-sdk/utils"
 	"github.com/ontio/multi-chain/core/types"
+	"github.com/ontio/multi-chain/common"
 	"math/rand"
 	"strconv"
 	"sync"
@@ -605,12 +605,14 @@ func (this *WSClient) getRawTransaction(qid, txHash string) ([]byte, error) {
 }
 
 func (this *WSClient) sendRawTransaction(qid string, tx *types.Transaction, isPreExec bool) ([]byte, error) {
-	var buffer bytes.Buffer
-	err := tx.Serialize(&buffer)
+	//var buffer bytes.Buffer
+	//err := tx.Serialize(&buffer)
+	var sink *common.ZeroCopySink
+	err := tx.Serialization(sink)
 	if err != nil {
 		return nil, fmt.Errorf("serialize error:%s", err)
 	}
-	txData := hex.EncodeToString(buffer.Bytes())
+	txData := hex.EncodeToString(sink.Bytes())
 	params := map[string]interface{}{"Data": txData}
 	if isPreExec {
 		params["PreExec"] = "1"
@@ -662,6 +664,11 @@ func (this *WSClient) getMerkleProof(qid, txHash string) ([]byte, error) {
 	return this.sendSyncWSRequest(qid, WS_ACTION_GET_MERKLE_PROOF, map[string]interface{}{"Hash": txHash})
 }
 
+func (this *WSClient) getCrossStatesProof(qid string, height uint32, key string) ([]byte, error) {
+	return nil, fmt.Errorf("Does not support GetCrossStatesProof for websocket")
+}
+
+
 func (this *WSClient) getSmartContractEvent(qid, txHash string) ([]byte, error) {
 	return this.sendSyncWSRequest(qid, WS_ACTION_GET_SMARTCONTRACT_BY_HASH, map[string]interface{}{"Hash": txHash})
 }
@@ -675,12 +682,14 @@ func (this *WSClient) GetActionCh() chan *WSAction {
 }
 
 func (this *WSClient) sendAsyncRawTransaction(qid string, tx *types.Transaction, isPreExec bool) (*WSRequest, error) {
-	var buffer bytes.Buffer
-	err := tx.Serialize(&buffer)
+	//var buffer bytes.Buffer
+	//err := tx.Serialize(&buffer)
+	var sink *common.ZeroCopySink
+	err := tx.Serialization(sink)
 	if err != nil {
 		return nil, fmt.Errorf("serialize error:%s", err)
 	}
-	txData := hex.EncodeToString(buffer.Bytes())
+	txData := hex.EncodeToString(sink.Bytes())
 	params := map[string]interface{}{"Data": txData}
 	if isPreExec {
 		params["PreExec"] = "1"

@@ -24,8 +24,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/ontio/multi-chain/common"
-	"github.com/ontio/multi-chain/core/payload"
-	"math/big"
 )
 
 var (
@@ -52,7 +50,7 @@ type TransferFromInfo struct {
 	Value  uint64
 }
 
-type SmartContract payload.DeployCode
+//type SmartContract payload.DeployCode
 
 type PreExecResult struct {
 	State  byte
@@ -144,13 +142,7 @@ func (this ResultItem) ToBool() (bool, error) {
 	return this.value == "01", nil
 }
 
-func (this ResultItem) ToInteger() (*big.Int, error) {
-	data, err := this.ToByteArray()
-	if err != nil {
-		return nil, err
-	}
-	return common.BigIntFromNeoBytes(data), nil
-}
+
 
 func (this ResultItem) ToByteArray() ([]byte, error) {
 	if this.values != nil {

@@ -18,14 +18,13 @@
 package utils
 
 import (
-	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	sdkcom "github.com/ontio/multi-chain-go-sdk/common"
 	"github.com/ontio/multi-chain/common"
-	"github.com/ontio/multi-chain/core/payload"
 	"github.com/ontio/multi-chain/core/types"
+
 )
 
 func GetVersion(data []byte) (string, error) {
@@ -144,27 +143,27 @@ func GetSmartContactEvents(data []byte) ([]*sdkcom.SmartContactEvent, error) {
 	return events, nil
 }
 
-func GetSmartContract(data []byte) (*payload.DeployCode, error) {
-	hexStr := ""
-	err := json.Unmarshal(data, &hexStr)
-	if err != nil {
-		return nil, fmt.Errorf("json.Unmarshal error:%s", err)
-	}
-	if hexStr == "" {
-		return nil, nil
-	}
-	hexData, err := hex.DecodeString(hexStr)
-	if err != nil {
-		return nil, fmt.Errorf("hex.DecodeString error:%s", err)
-	}
-	buf := bytes.NewReader(hexData)
-	deploy := &payload.DeployCode{}
-	err = deploy.Deserialize(buf)
-	if err != nil {
-		return nil, err
-	}
-	return deploy, nil
-}
+//func GetSmartContract(data []byte) (*payload.DeployCode, error) {
+//	hexStr := ""
+//	err := json.Unmarshal(data, &hexStr)
+//	if err != nil {
+//		return nil, fmt.Errorf("json.Unmarshal error:%s", err)
+//	}
+//	if hexStr == "" {
+//		return nil, nil
+//	}
+//	hexData, err := hex.DecodeString(hexStr)
+//	if err != nil {
+//		return nil, fmt.Errorf("hex.DecodeString error:%s", err)
+//	}
+//	buf := bytes.NewReader(hexData)
+//	deploy := &payload.DeployCode{}
+//	err = deploy.Deserialize(buf)
+//	if err != nil {
+//		return nil, err
+//	}
+//	return deploy, nil
+//}
 
 func GetMerkleProof(data []byte) (*sdkcom.MerkleProof, error) {
 	proof := &sdkcom.MerkleProof{}

@@ -171,22 +171,22 @@ func (this *ClientMgr) GetStorage(contractAddress string, key []byte) ([]byte, e
 	return utils.GetStorage(data)
 }
 
-func (this *ClientMgr) GetSmartContract(contractAddress string) (*sdkcom.SmartContract, error) {
-	client := this.getClient()
-	if client == nil {
-		return nil, fmt.Errorf("don't have available client of ontology")
-	}
-	data, err := client.getSmartContract(this.getNextQid(), contractAddress)
-	if err != nil {
-		return nil, err
-	}
-	deployCode, err := utils.GetSmartContract(data)
-	if err != nil {
-		return nil, err
-	}
-	sm := sdkcom.SmartContract(*deployCode)
-	return &sm, nil
-}
+//func (this *ClientMgr) GetSmartContract(contractAddress string) (*sdkcom.SmartContract, error) {
+//	client := this.getClient()
+//	if client == nil {
+//		return nil, fmt.Errorf("don't have available client of ontology")
+//	}
+//	data, err := client.getSmartContract(this.getNextQid(), contractAddress)
+//	if err != nil {
+//		return nil, err
+//	}
+//	deployCode, err := utils.GetSmartContract(data)
+//	if err != nil {
+//		return nil, err
+//	}
+//	sm := sdkcom.SmartContract(*deployCode)
+//	return &sm, nil
+//}
 
 func (this *ClientMgr) GetSmartContractEvent(txHash string) (*sdkcom.SmartContactEvent, error) {
 	client := this.getClient()
@@ -218,6 +218,18 @@ func (this *ClientMgr) GetMerkleProof(txHash string) (*sdkcom.MerkleProof, error
 		return nil, fmt.Errorf("don't have available client of ontology")
 	}
 	data, err := client.getMerkleProof(this.getNextQid(), txHash)
+	if err != nil {
+		return nil, err
+	}
+	return utils.GetMerkleProof(data)
+}
+
+func (this *ClientMgr) GetCrossStatesProof(height uint32, key string) (*sdkcom.MerkleProof, error) {
+	client := this.getClient()
+	if client == nil {
+		return nil, fmt.Errorf("don't have available client of ontology")
+	}
+	data, err := client.getCrossStatesProof(this.getNextQid(), height, key)
 	if err != nil {
 		return nil, err
 	}
@@ -272,15 +284,12 @@ func (this *ClientMgr) GetNetworkId() (uint32, error) {
 	return utils.GetUint32(data)
 }
 
-func (this *ClientMgr) SendTransaction(mutTx *types.MutableTransaction) (common.Uint256, error) {
+func (this *ClientMgr) SendTransaction(tx *types.Transaction) (common.Uint256, error) {
 	client := this.getClient()
 	if client == nil {
 		return common.UINT256_EMPTY, fmt.Errorf("don't have available client of ontology")
 	}
-	tx, err := mutTx.IntoImmutable()
-	if err != nil {
-		return common.UINT256_EMPTY, err
-	}
+
 	data, err := client.sendRawTransaction(this.getNextQid(), tx, false)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -288,14 +297,10 @@ func (this *ClientMgr) SendTransaction(mutTx *types.MutableTransaction) (common.
 	return utils.GetUint256(data)
 }
 
-func (this *ClientMgr) PreExecTransaction(mutTx *types.MutableTransaction) (*sdkcom.PreExecResult, error) {
+func (this *ClientMgr) PreExecTransaction(tx *types.Transaction) (*sdkcom.PreExecResult, error) {
 	client := this.getClient()
 	if client == nil {
 		return nil, fmt.Errorf("don't have available client of ontology")
-	}
-	tx, err := mutTx.IntoImmutable()
-	if err != nil {
-		return nil, err
 	}
 	data, err := client.sendRawTransaction(this.getNextQid(), tx, true)
 	if err != nil {

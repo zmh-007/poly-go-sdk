@@ -1,22 +1,17 @@
 package ontology_go_sdk
 
 import (
-	"bytes"
-	"encoding/hex"
 	"fmt"
 	"github.com/ontio/ontology-crypto/keypair"
 	sdkcom "github.com/ontio/multi-chain-go-sdk/common"
 	"github.com/ontio/multi-chain-go-sdk/utils"
 	"github.com/ontio/multi-chain/common"
-	"github.com/ontio/multi-chain/common/serialization"
 	"github.com/ontio/multi-chain/core/types"
-	"github.com/ontio/multi-chain/core/payload"
 	nccmc "github.com/ontio/multi-chain/native/service/cross_chain_manager/common"
 	hc "github.com/ontio/multi-chain/native/service/header_sync"
 	scm "github.com/ontio/multi-chain/native/service/side_chain_manager"
 	ccm "github.com/ontio/multi-chain/native/service/cross_chain_manager"
 	"github.com/ontio/multi-chain/native/states"
-	"github.com/ontio/multi-chain/account"
 )
 
 var (
@@ -298,7 +293,7 @@ type SideChainManager struct {
 	native *NativeContract
 }
 
-func (this *SideChainManager) NewGegisterSideChainTransaction(address string, chainId uint64, name string, blocksToWait uint64) (*types.Transaction, error) {
+func (this *SideChainManager) NewRegisterSideChainTransaction(address string, chainId uint64, name string, blocksToWait uint64) (*types.Transaction, error) {
 
 	state := &scm.RegisterSideChainParam{
 		Address:  address,
@@ -319,9 +314,9 @@ func (this *SideChainManager) NewGegisterSideChainTransaction(address string, ch
 		scm.REGISTER_SIDE_CHAIN,
 		sink.Bytes())
 }
-func (this *SideChainManager) GegisterSideChain(address string, chainId uint64, name string, blocksToWait uint64, signer *Account) (common.Uint256, error)  {
+func (this *SideChainManager) RegisterSideChain(address string, chainId uint64, name string, blocksToWait uint64, signer *Account) (common.Uint256, error)  {
 
-	tx, err := this.NewGegisterSideChainTransaction(address, chainId, name, blocksToWait)
+	tx, err := this.NewRegisterSideChainTransaction(address, chainId, name, blocksToWait)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
@@ -351,13 +346,25 @@ func (this *SideChainManager) NewApproveRegisterSideChainTransaction(chainId uin
 		scm.APPROVE_REGISTER_SIDE_CHAIN,
 		sink.Bytes())
 }
-func (this *SideChainManager) ApproveRegisterSideChain(chainId uint64, signer *Account) (common.Uint256, error)  {
+func (this *SideChainManager) ApproveRegisterSideChain(chainId uint64, signers []*Account) (common.Uint256, error)  {
 
-	tx, err := this.NewGegisterSideChainTransaction(chainId)
+	tx, err := this.NewApproveRegisterSideChainTransaction(chainId)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
-	err = this.mcSdk.SignToTransaction(tx, signer)
+
+	pubKeys := make([]keypair.PublicKey, 0)
+	for _, acc := range signers {
+		pubKeys = append(pubKeys, acc.PublicKey)
+	}
+
+	for _, signer := range signers {
+		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
+		if err != nil {
+			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
+		}
+	}
+
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
@@ -389,7 +396,7 @@ func (this *SideChainManager) NewUpdateSideChainTransaction(address string, chai
 }
 func (this *SideChainManager) UpdateSideChain(address string, chainId uint64, name string, blocksToWait uint64, signer *Account) (common.Uint256, error)  {
 
-	tx, err := this.NewGegisterSideChainTransaction(address, chainId, name, blocksToWait)
+	tx, err := this.NewRegisterSideChainTransaction(address, chainId, name, blocksToWait)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
@@ -480,12 +487,24 @@ func (this *SideChainManager) NewAssetMappingTransaction(address string, assetNa
 		scm.ASSET_MAP,
 		sink.Bytes())
 }
-func (this *SideChainManager) AssetMapping(address string, assetName string, assetList []*scm.Asset, signer *Account) (common.Uint256, error)  {
+func (this *SideChainManager) AssetMapping(address string, assetName string, assetList []*scm.Asset, signers []*Account, int m) (common.Uint256, error)  {
 	tx, err := this.NewAssetMappingTransaction(address, assetName, assetList)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
-	err = this.mcSdk.SignToTransaction(tx, signer)
+
+	pubKeys := make([]keypair.PublicKey, 0)
+	for _, acc := range signers {
+		pubKeys = append(pubKeys, acc.PublicKey)
+	}
+
+	for _, signer := range signers {
+		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
+		if err != nil {
+			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
+		}
+	}
+
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}

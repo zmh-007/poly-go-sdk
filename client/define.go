@@ -23,6 +23,7 @@ type OntologyClient interface {
 	getSmartContractEventByBlock(qid string, blockHeight uint32) ([]byte, error)
 	getStorage(qid, contractAddress string, key []byte) ([]byte, error)
 	getMerkleProof(qid, txHash string) ([]byte, error)
+	getCrossStatesProof(qid string, height uint32, key string) ([]byte, error)
 	getMemPoolTxState(qid, txHash string) ([]byte, error)
 	getMemPoolTxCount(qid string) ([]byte, error)
 	sendRawTransaction(qid string, tx *types.Transaction, isPreExec bool) ([]byte, error)
@@ -42,6 +43,8 @@ const (
 	RPC_GET_SMART_CONTRACT          = "getcontractstate"
 	RPC_GET_GENERATE_BLOCK_TIME     = "getgenerateblocktime"
 	RPC_GET_MERKLE_PROOF            = "getmerkleproof"
+	RPC_GET_CROSS_STATES_PROOF      = "getcrossstatesproof"
+
 	RPC_GET_NETWORK_ID              = "getnetworkid"
 	RPC_GET_MEM_POOL_TX_COUNT       = "getmempooltxcount"
 	RPC_GET_MEM_POOL_TX_STATE       = "getmempooltxstate"
@@ -86,6 +89,7 @@ const (
 	GET_SMTCOCE_EVTS      = "/api/v1/smartcode/event/txhash/"
 	GET_BLK_HGT_BY_TXHASH = "/api/v1/block/height/txhash/"
 	GET_MERKLE_PROOF      = "/api/v1/merkleproof/"
+	GET_CROSS_STATES_PROOF= "api/v1/getcrossstatesproof/height/key/"
 	GET_GAS_PRICE         = "/api/v1/gasprice"
 	GET_ALLOWANCE         = "/api/v1/allowance/"
 	GET_UNBOUNDONG        = "/api/v1/unboundong/"
