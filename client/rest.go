@@ -181,7 +181,7 @@ func (this *RestClient) getBlockTxHashesByHeight(qid string, height uint32) ([]b
 
 func (this *RestClient) sendRawTransaction(qid string, tx *types.Transaction, isPreExec bool) ([]byte, error) {
 	reqPath := POST_RAW_TX
-	var sink *common.ZeroCopySink
+	var sink = new(common.ZeroCopySink)
 	err := tx.Serialization(sink)
 	if err != nil {
 		return nil, fmt.Errorf("Serialize error:%s", err)
