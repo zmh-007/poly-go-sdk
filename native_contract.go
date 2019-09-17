@@ -193,9 +193,10 @@ type HeaderSync struct {
 	native *NativeContract
 }
 
-func (this *HeaderSync) NewSyncGenesisHeaderTransaction( genesisHeader []byte) (*types.Transaction, error) {
+func (this *HeaderSync) NewSyncGenesisHeaderTransaction(chainId uint64, genesisHeader []byte) (*types.Transaction, error) {
 
 	state := &hsc.SyncGenesisHeaderParam{
+		ChainID: chainId,
 		GenesisHeader:  genesisHeader,
 	}
 
@@ -212,8 +213,8 @@ func (this *HeaderSync) NewSyncGenesisHeaderTransaction( genesisHeader []byte) (
 		sink.Bytes())
 }
 
-func (this *HeaderSync) SyncGenesisHeader(genesisHeader []byte, signers []*Account) (common.Uint256, error) {
-	tx, err := this.NewSyncGenesisHeaderTransaction(genesisHeader)
+func (this *HeaderSync) SyncGenesisHeader(chainId uint64, genesisHeader []byte, signers []*Account) (common.Uint256, error) {
+	tx, err := this.NewSyncGenesisHeaderTransaction(chainId, genesisHeader)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
