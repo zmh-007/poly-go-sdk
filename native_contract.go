@@ -1,10 +1,9 @@
-package ontology_go_sdk
+package multi_chain_go_sdk
 
 import (
 	"fmt"
 	"github.com/ontio/ontology-crypto/keypair"
 	sdkcom "github.com/ontio/multi-chain-go-sdk/common"
-	"github.com/ontio/multi-chain-go-sdk/utils"
 	"github.com/ontio/multi-chain/common"
 	"github.com/ontio/multi-chain/core/types"
 	nccmc "github.com/ontio/multi-chain/native/service/cross_chain_manager/common"
@@ -13,17 +12,16 @@ import (
 	scm "github.com/ontio/multi-chain/native/service/side_chain_manager"
 	ccm "github.com/ontio/multi-chain/native/service/cross_chain_manager"
 	"github.com/ontio/multi-chain/native/states"
+	mcnsu "github.com/ontio/multi-chain/native/service/utils"
 )
 
 var (
-	CrossChainContractAddress, _           = utils.AddressFromHexString("0100000000000000000000000000000000000000")
-	HeaderSyncContractAddress, _           = utils.AddressFromHexString("0200000000000000000000000000000000000000")
-	CrossChainManagerContractAddress, _        = utils.AddressFromHexString("0300000000000000000000000000000000000000")
-	SideChainManagerContractAddress, _ = utils.AddressFromHexString("0400000000000000000000000000000000000000")
+	HeaderSyncContractAddress           = 	mcnsu.HeaderSyncContractAddress
+	CrossChainManagerContractAddress        = mcnsu.CrossChainManagerContractAddress
+	SideChainManagerContractAddress = mcnsu.SideChainManagerContractAddress
 )
 
 var (
-	CROSS_CHAIN_CONTRACT_VERSION           = byte(0)
 	HEADER_SYNC_CONTRACT_VERSION           = byte(0)
 	CROSS_CHAIN_MANAGER_CONTRACT_VERSION        = byte(0)
 	SIDE_CHAIN_MANAGER_CONTRACT_VERSION = byte(0)
