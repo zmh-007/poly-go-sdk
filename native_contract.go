@@ -505,7 +505,7 @@ func (this *SideChainManager) NewAssetMappingTransaction(address string, assetNa
 	return this.native.NewNativeInvokeTransaction(
 		SIDE_CHAIN_MANAGER_CONTRACT_VERSION,
 		SideChainManagerContractAddress,
-		scm.ASSET_MAP,
+		scm.ASSET_MAPPING,
 		sink.Bytes())
 }
 func (this *SideChainManager) AssetMapping(address string, assetName string, assetList []*scm.Asset, signer *Account) (common.Uint256, error)  {
@@ -538,7 +538,7 @@ func (this *SideChainManager) NewApproveAssetMappingTransaction(assetName string
 	return this.native.NewNativeInvokeTransaction(
 		SIDE_CHAIN_MANAGER_CONTRACT_VERSION,
 		SideChainManagerContractAddress,
-		scm.ASSET_MAP,
+		scm.APPROVE_ASSET_MAPPING,
 		sink.Bytes())
 }
 
