@@ -16,7 +16,7 @@
  * along with The ontology.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package ontology_go_sdk
+package multi_chain_go_sdk
 
 import (
 	"bytes"

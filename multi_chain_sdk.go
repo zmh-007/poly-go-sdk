@@ -16,8 +16,8 @@
  * along with The ontology.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//Ontolog sdk in golang. Using for operation with ontology
-package ontology_go_sdk
+//multi_chain sdk in golang. Using for operation with ontology
+package multi_chain_go_sdk
 
 import (
 	"encoding/hex"

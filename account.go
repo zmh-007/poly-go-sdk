@@ -1,4 +1,4 @@
-package ontology_go_sdk
+package multi_chain_go_sdk
 
 import (
 	"crypto/elliptic"
@@ -7,8 +7,9 @@ import (
 	"github.com/ontio/ontology-crypto/ec"
 	"github.com/ontio/ontology-crypto/keypair"
 	s "github.com/ontio/ontology-crypto/signature"
-	"github.com/ontio/multi-chain/common"
 	"github.com/ontio/multi-chain/core/types"
+	"github.com/ontio/multi-chain/common"
+	//mca "github.com/ontio/multi-chain/account"
 )
 
 type Signer interface {
@@ -25,6 +26,8 @@ type Account struct {
 	Address    common.Address
 	SigScheme  s.SignatureScheme
 }
+
+//type Account mca.Account
 
 func NewAccountFromPrivateKey(privateKey []byte, signatureScheme s.SignatureScheme) (*Account, error) {
 	if privateKey == nil {
