@@ -2,40 +2,40 @@ package multi_chain_go_sdk
 
 import (
 	"fmt"
-	"github.com/ontio/ontology-crypto/keypair"
 	sdkcom "github.com/ontio/multi-chain-go-sdk/common"
 	"github.com/ontio/multi-chain/common"
 	"github.com/ontio/multi-chain/core/types"
-	nccmc "github.com/ontio/multi-chain/native/service/cross_chain_manager/common"
-	hsc "github.com/ontio/multi-chain/native/service/header_sync/common"
-	hs "github.com/ontio/multi-chain/native/service/header_sync"
-	scm "github.com/ontio/multi-chain/native/service/side_chain_manager"
 	ccm "github.com/ontio/multi-chain/native/service/cross_chain_manager"
-	"github.com/ontio/multi-chain/native/states"
+	nccmc "github.com/ontio/multi-chain/native/service/cross_chain_manager/common"
+	hs "github.com/ontio/multi-chain/native/service/header_sync"
+	hsc "github.com/ontio/multi-chain/native/service/header_sync/common"
+	scm "github.com/ontio/multi-chain/native/service/side_chain_manager"
 	mcnsu "github.com/ontio/multi-chain/native/service/utils"
+	"github.com/ontio/multi-chain/native/states"
+	"github.com/ontio/ontology-crypto/keypair"
 )
 
 var (
-	HeaderSyncContractAddress           = 	mcnsu.HeaderSyncContractAddress
-	CrossChainManagerContractAddress        = mcnsu.CrossChainManagerContractAddress
-	SideChainManagerContractAddress = mcnsu.SideChainManagerContractAddress
+	HeaderSyncContractAddress        = mcnsu.HeaderSyncContractAddress
+	CrossChainManagerContractAddress = mcnsu.CrossChainManagerContractAddress
+	SideChainManagerContractAddress  = mcnsu.SideChainManagerContractAddress
 )
 
 var (
-	HEADER_SYNC_CONTRACT_VERSION           = byte(0)
-	CROSS_CHAIN_MANAGER_CONTRACT_VERSION        = byte(0)
-	SIDE_CHAIN_MANAGER_CONTRACT_VERSION = byte(0)
+	HEADER_SYNC_CONTRACT_VERSION         = byte(0)
+	CROSS_CHAIN_MANAGER_CONTRACT_VERSION = byte(0)
+	SIDE_CHAIN_MANAGER_CONTRACT_VERSION  = byte(0)
 )
 
 var OPCODE_IN_PAYLOAD = map[byte]bool{0xc6: true, 0x6b: true, 0x6a: true, 0xc8: true, 0x6c: true, 0x68: true, 0x67: true,
 	0x7c: true, 0xc1: true}
 
 type NativeContract struct {
-	mcSdk        *MultiChainSdk
-	Cc			 *CrossChain
-	Hs           *HeaderSync
-	Ccm          *CrossChainManager
-	Scm			 *SideChainManager
+	mcSdk *MultiChainSdk
+	Cc    *CrossChain
+	Hs    *HeaderSync
+	Ccm   *CrossChainManager
+	Scm   *SideChainManager
 }
 
 func newNativeContract(mcSdk *MultiChainSdk) *NativeContract {
@@ -47,8 +47,6 @@ func newNativeContract(mcSdk *MultiChainSdk) *NativeContract {
 	return native
 }
 
-
-
 func (this *NativeContract) NewNativeInvokeTransaction(
 	version byte,
 	contractAddress common.Address,
@@ -56,7 +54,7 @@ func (this *NativeContract) NewNativeInvokeTransaction(
 	paramBytes []byte,
 ) (*types.Transaction, error) {
 
-	contractInvokeParam := &states.ContractInvokeParam{Version:version, Address: contractAddress, Method:method, Args: paramBytes}
+	contractInvokeParam := &states.ContractInvokeParam{Version: version, Address: contractAddress, Method: method, Args: paramBytes}
 	invokeCode := new(common.ZeroCopySink)
 	contractInvokeParam.Serialization(invokeCode)
 
@@ -82,7 +80,6 @@ func (this *NativeContract) NewNativeInvokeTransaction(
 //	return this.mcSdk.SendTransaction(tx)
 //}
 
-
 func (this *NativeContract) PreExecInvokeNativeContract(
 	contractAddress common.Address,
 	version byte,
@@ -96,13 +93,10 @@ func (this *NativeContract) PreExecInvokeNativeContract(
 	return this.mcSdk.PreExecTransaction(tx)
 }
 
-
 type CrossChain struct {
 	mcSdk  *MultiChainSdk
 	native *NativeContract
 }
-
-
 
 type CrossChainManager struct {
 	mcSdk  *MultiChainSdk
@@ -117,9 +111,9 @@ func (this *CrossChainManager) NewVoteTransaction(fromChainId uint64, address st
 	}
 	txHashBs := txHashU.ToArray()
 	state := &nccmc.VoteParam{
-		FromChainID:  fromChainId,
-		Address:    address,
-		TxHash: txHashBs,
+		FromChainID: fromChainId,
+		Address:     address,
+		TxHash:      txHashBs,
 	}
 
 	sink := new(common.ZeroCopySink)
@@ -151,12 +145,12 @@ func (this *CrossChainManager) NewImportOuterTransferTransaction(sourceChainId u
 
 	state := &nccmc.EntranceParam{
 		SourceChainID:  sourceChainId,
-		TxData:  txData,
-		Height:  height,
-		Proof:  proof,
-		RelayerAddress:  relayerAddress,
+		TxData:         txData,
+		Height:         height,
+		Proof:          proof,
+		RelayerAddress: relayerAddress,
 		TargetChainID:  targetChainId,
-		Value:  value,
+		Value:          value,
 	}
 
 	sink := new(common.ZeroCopySink)
@@ -185,24 +179,20 @@ func (this *CrossChainManager) ImportOuterTransfer(sourceChainId uint64, txData 
 	return this.mcSdk.SendTransaction(tx)
 }
 
-
 type HeaderSync struct {
-	mcSdk *MultiChainSdk
+	mcSdk  *MultiChainSdk
 	native *NativeContract
 }
 
 func (this *HeaderSync) NewSyncGenesisHeaderTransaction(chainId uint64, genesisHeader []byte) (*types.Transaction, error) {
 
 	state := &hsc.SyncGenesisHeaderParam{
-		ChainID: chainId,
-		GenesisHeader:  genesisHeader,
+		ChainID:       chainId,
+		GenesisHeader: genesisHeader,
 	}
 
 	sink := new(common.ZeroCopySink)
-	err := state.Serialization(sink)
-	if err != nil {
-		return nil, fmt.Errorf("Parameter Serilization error: %s", err)
-	}
+	state.Serialization(sink)
 
 	return this.native.NewNativeInvokeTransaction(
 		HEADER_SYNC_CONTRACT_VERSION,
@@ -235,11 +225,10 @@ func (this *HeaderSync) SyncGenesisHeader(chainId uint64, genesisHeader []byte, 
 	return this.mcSdk.SendTransaction(tx)
 }
 
-
 func (this *HeaderSync) NewSyncBlockHeaderTransaction(chainId uint64, address common.Address, headers [][]byte) (*types.Transaction, error) {
 	state := &hsc.SyncBlockHeaderParam{
 		ChainID: chainId,
-		Address:  address,
+		Address: address,
 		Headers: headers,
 	}
 
@@ -270,13 +259,12 @@ func (this *HeaderSync) SyncBlockHeader(chainId uint64, address common.Address, 
 
 func (this *HeaderSync) NewSyncGenesisTransaction(chainId uint64, genesisHeader []byte) (*types.Transaction, error) {
 	state := &hsc.SyncGenesisHeaderParam{
-		ChainID: chainId,
+		ChainID:       chainId,
 		GenesisHeader: genesisHeader,
 	}
 
 	sink := new(common.ZeroCopySink)
 	state.Serialization(sink)
-
 
 	return this.native.NewNativeInvokeTransaction(
 		HEADER_SYNC_CONTRACT_VERSION,
@@ -297,7 +285,6 @@ func (this *HeaderSync) SyncGenesisPeers(chainId uint64, genesisHeader []byte, s
 	return this.mcSdk.SendTransaction(tx)
 }
 
-
 type SideChainManager struct {
 	mcSdk  *MultiChainSdk
 	native *NativeContract
@@ -306,9 +293,9 @@ type SideChainManager struct {
 func (this *SideChainManager) NewRegisterSideChainTransaction(address string, chainId uint64, name string, blocksToWait uint64) (*types.Transaction, error) {
 
 	state := &scm.RegisterSideChainParam{
-		Address:  address,
-		ChainId: chainId,
-		Name: name,
+		Address:      address,
+		ChainId:      chainId,
+		Name:         name,
 		BlocksToWait: blocksToWait,
 	}
 
@@ -324,7 +311,7 @@ func (this *SideChainManager) NewRegisterSideChainTransaction(address string, ch
 		scm.REGISTER_SIDE_CHAIN,
 		sink.Bytes())
 }
-func (this *SideChainManager) RegisterSideChain(address string, chainId uint64, name string, blocksToWait uint64, signer *Account) (common.Uint256, error)  {
+func (this *SideChainManager) RegisterSideChain(address string, chainId uint64, name string, blocksToWait uint64, signer *Account) (common.Uint256, error) {
 
 	tx, err := this.NewRegisterSideChainTransaction(address, chainId, name, blocksToWait)
 	if err != nil {
@@ -336,7 +323,6 @@ func (this *SideChainManager) RegisterSideChain(address string, chainId uint64, 
 	}
 	return this.mcSdk.SendTransaction(tx)
 }
-
 
 func (this *SideChainManager) NewApproveRegisterSideChainTransaction(chainId uint64) (*types.Transaction, error) {
 
@@ -356,7 +342,7 @@ func (this *SideChainManager) NewApproveRegisterSideChainTransaction(chainId uin
 		scm.APPROVE_REGISTER_SIDE_CHAIN,
 		sink.Bytes())
 }
-func (this *SideChainManager) ApproveRegisterSideChain(chainId uint64, signers []*Account) (common.Uint256, error)  {
+func (this *SideChainManager) ApproveRegisterSideChain(chainId uint64, signers []*Account) (common.Uint256, error) {
 
 	tx, err := this.NewApproveRegisterSideChainTransaction(chainId)
 	if err != nil {
@@ -381,14 +367,12 @@ func (this *SideChainManager) ApproveRegisterSideChain(chainId uint64, signers [
 	return this.mcSdk.SendTransaction(tx)
 }
 
-
-
 func (this *SideChainManager) NewUpdateSideChainTransaction(address string, chainId uint64, name string, blocksToWait uint64) (*types.Transaction, error) {
 
 	state := &scm.RegisterSideChainParam{
-		Address:  address,
-		ChainId: chainId,
-		Name: name,
+		Address:      address,
+		ChainId:      chainId,
+		Name:         name,
 		BlocksToWait: blocksToWait,
 	}
 
@@ -404,7 +388,7 @@ func (this *SideChainManager) NewUpdateSideChainTransaction(address string, chai
 		scm.UPDATE_SIDE_CHAIN,
 		sink.Bytes())
 }
-func (this *SideChainManager) UpdateSideChain(address string, chainId uint64, name string, blocksToWait uint64, signer *Account) (common.Uint256, error)  {
+func (this *SideChainManager) UpdateSideChain(address string, chainId uint64, name string, blocksToWait uint64, signer *Account) (common.Uint256, error) {
 
 	tx, err := this.NewRegisterSideChainTransaction(address, chainId, name, blocksToWait)
 	if err != nil {
@@ -416,7 +400,6 @@ func (this *SideChainManager) UpdateSideChain(address string, chainId uint64, na
 	}
 	return this.mcSdk.SendTransaction(tx)
 }
-
 
 func (this *SideChainManager) NewApproveUpdateSideChainTransaction(chainId uint64) (*types.Transaction, error) {
 	state := &scm.ChainidParam{
@@ -435,7 +418,7 @@ func (this *SideChainManager) NewApproveUpdateSideChainTransaction(chainId uint6
 		scm.APPROVE_UPDATE_SIDE_CHAIN,
 		sink.Bytes())
 }
-func (this *SideChainManager) ApproveUpdateSideChain(chainId uint64, signers []*Account) (common.Uint256, error)  {
+func (this *SideChainManager) ApproveUpdateSideChain(chainId uint64, signers []*Account) (common.Uint256, error) {
 	tx, err := this.NewApproveUpdateSideChainTransaction(chainId)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -459,8 +442,6 @@ func (this *SideChainManager) ApproveUpdateSideChain(chainId uint64, signers []*
 	return this.mcSdk.SendTransaction(tx)
 }
 
-
-
 func (this *SideChainManager) NewRemoveSideChainTransaction(chainId uint64) (*types.Transaction, error) {
 	state := &scm.ChainidParam{
 		Chainid: chainId,
@@ -478,7 +459,7 @@ func (this *SideChainManager) NewRemoveSideChainTransaction(chainId uint64) (*ty
 		scm.REMOVE_SIDE_CHAIN,
 		sink.Bytes())
 }
-func (this *SideChainManager) RemoveSideChain(chainId uint64, signer *Account) (common.Uint256, error)  {
+func (this *SideChainManager) RemoveSideChain(chainId uint64, signer *Account) (common.Uint256, error) {
 	tx, err := this.NewApproveUpdateSideChainTransaction(chainId)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -492,7 +473,7 @@ func (this *SideChainManager) RemoveSideChain(chainId uint64, signer *Account) (
 
 func (this *SideChainManager) NewAssetMappingTransaction(address string, assetName string, assetList []*scm.Asset) (*types.Transaction, error) {
 	state := &scm.AssetMappingParam{
-		Address: address,
+		Address:   address,
 		AssetName: assetName,
 		AssetList: assetList,
 	}
@@ -509,7 +490,7 @@ func (this *SideChainManager) NewAssetMappingTransaction(address string, assetNa
 		scm.ASSET_MAPPING,
 		sink.Bytes())
 }
-func (this *SideChainManager) AssetMapping(address string, assetName string, assetList []*scm.Asset, signer *Account) (common.Uint256, error)  {
+func (this *SideChainManager) AssetMapping(address string, assetName string, assetList []*scm.Asset, signer *Account) (common.Uint256, error) {
 	tx, err := this.NewAssetMappingTransaction(address, assetName, assetList)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -543,7 +524,7 @@ func (this *SideChainManager) NewApproveAssetMappingTransaction(assetName string
 		sink.Bytes())
 }
 
-func (this *SideChainManager) ApproveAssetMapping(assetName string, signers []*Account) (common.Uint256, error)  {
+func (this *SideChainManager) ApproveAssetMapping(assetName string, signers []*Account) (common.Uint256, error) {
 	tx, err := this.NewApproveAssetMappingTransaction(assetName)
 
 	if err != nil {
@@ -567,5 +548,3 @@ func (this *SideChainManager) ApproveAssetMapping(assetName string, signers []*A
 	}
 	return this.mcSdk.SendTransaction(tx)
 }
-
-

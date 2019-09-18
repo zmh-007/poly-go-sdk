@@ -23,8 +23,8 @@ import (
 	"fmt"
 	sdkcom "github.com/ontio/multi-chain-go-sdk/common"
 	"github.com/ontio/multi-chain-go-sdk/utils"
-	"github.com/ontio/multi-chain/core/types"
 	"github.com/ontio/multi-chain/common"
+	"github.com/ontio/multi-chain/core/types"
 	"math/rand"
 	"strconv"
 	"sync"
@@ -667,7 +667,6 @@ func (this *WSClient) getMerkleProof(qid, txHash string) ([]byte, error) {
 func (this *WSClient) getCrossStatesProof(qid string, height uint32, key string) ([]byte, error) {
 	return nil, fmt.Errorf("Does not support GetCrossStatesProof for websocket")
 }
-
 
 func (this *WSClient) getSmartContractEvent(qid, txHash string) ([]byte, error) {
 	return this.sendSyncWSRequest(qid, WS_ACTION_GET_SMARTCONTRACT_BY_HASH, map[string]interface{}{"Hash": txHash})

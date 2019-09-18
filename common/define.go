@@ -142,8 +142,6 @@ func (this ResultItem) ToBool() (bool, error) {
 	return this.value == "01", nil
 }
 
-
-
 func (this ResultItem) ToByteArray() ([]byte, error) {
 	if this.values != nil {
 		return nil, fmt.Errorf("type error")
@@ -242,12 +240,10 @@ type MerkleProof struct {
 	TargetHashes     []string
 }
 
-
 type CrossStatesProof struct {
 	Type      string
 	AuditPath string
 }
-
 
 type BlockTxHashes struct {
 	Hash         common.Uint256

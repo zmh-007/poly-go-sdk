@@ -1,23 +1,20 @@
 package test
 
 import (
-	"testing"
 	"fmt"
 	oc "github.com/ontio/multi-chain/common"
+	"testing"
 
-	"github.com/ontio/multi-chain-go-sdk/common"
-	"github.com/ontio/ontology-crypto/signature"
 	"encoding/json"
 	"errors"
 	"github.com/ontio/multi-chain-go-sdk"
+	"github.com/ontio/multi-chain-go-sdk/common"
+	"github.com/ontio/ontology-crypto/signature"
 )
-
-
 
 //const (
 //	TestNet = "172.168.3.73"
 //)
-
 
 func TestVote(t *testing.T) {
 	sdk := multi_chain_go_sdk.NewMultiChainSdk()
@@ -43,13 +40,12 @@ func TestVote(t *testing.T) {
 		}
 	}
 	jsonResultBytes, e := json.Marshal(results)
-	if e !=  nil {
+	if e != nil {
 		fmt.Printf("marshal results struct error : %+v", e)
 	} else {
 		fmt.Printf("marshal results struct to json is %+v\n", string(jsonResultBytes))
 	}
 }
-
 
 func TestRegisterSideChain(t *testing.T) {
 	sdk := multi_chain_go_sdk.NewMultiChainSdk()
@@ -78,7 +74,7 @@ func TestRegisterSideChain(t *testing.T) {
 		}
 	}
 	jsonResultBytes, e := json.Marshal(results)
-	if e !=  nil {
+	if e != nil {
 		fmt.Printf("marshal results struct error : %+v", e)
 	} else {
 		fmt.Printf("marshal results struct to json is %+v\n", string(jsonResultBytes))
@@ -89,7 +85,6 @@ func TestGetMerkleProof(t *testing.T) {
 	sdk := multi_chain_go_sdk.NewMultiChainSdk()
 	sdk.NewWebSocketClient().Connect("ws://138.91.6.125:40335")
 	merkleProof, err := sdk.ClientMgr.GetMerkleProof("2e211bf859b84dc14b2ce3ecfaa95f26ed3b9818c5a4cfeaa77dec8241c51db9")
-
 
 	if err != nil {
 		fmt.Printf("The error is %+v\n", err)
@@ -103,7 +98,6 @@ func TestGetCrossStatesProof(t *testing.T) {
 	sdk.NewRpcClient().SetAddress("http://138.91.6.125:40336")
 	//sdk.NewWebSocketClient().Connect("ws://192.168.3.144:40335")
 	crossStatesProof, err := sdk.ClientMgr.GetCrossStatesProof(1, "k")
-
 
 	if err != nil {
 		fmt.Printf("The error is %+v\n", err)

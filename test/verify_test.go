@@ -1,26 +1,23 @@
 package test
 
 import (
-	"testing"
-	sig "github.com/ontio/ontology-crypto/signature"
-	mcc "github.com/ontio/multi-chain/common"
+	"fmt"
 	"github.com/ontio/multi-chain-go-sdk"
+	"github.com/ontio/multi-chain/common"
+	mcc "github.com/ontio/multi-chain/common"
 	"github.com/ontio/multi-chain/core/signature"
 	"github.com/ontio/multi-chain/core/types"
-	"github.com/stretchr/testify/assert"
-	"fmt"
 	"github.com/ontio/ontology-crypto/keypair"
-	"github.com/ontio/multi-chain/common"
+	sig "github.com/ontio/ontology-crypto/signature"
+	"github.com/stretchr/testify/assert"
+	"testing"
 )
-
-
 
 const (
 	privateK1 = "5f2fe68215476abb9852cfa7da31ef00aa1468782d5ca809da5c4e1390b8ee45"
 	privateK2 = "f00dd7f5356e8aee93a049bdccc44ce91169e07ea3bec9f4e0142e456fd39bae"
 	privateK3 = "da213fb4cb1b12269c20307dadda35a7c89869c0c791b777fd8618d4159db99c"
 )
-
 
 func TestVerifyTx(t *testing.T) {
 	sdk := multi_chain_go_sdk.NewMultiChainSdk()
@@ -39,11 +36,9 @@ func TestVerifyTx(t *testing.T) {
 	//Hence, must do serialization
 	fmt.Println("after serialization, txHash = ", tx.Hash())
 
-
 	err = sdk.SignToTransaction(tx, signer)
 	//err = utils.SignTransaction(, tx)
 	assert.Nil(t, err)
-
 
 	hash := tx.Hash()
 	err = signature.Verify(signer.PublicKey, hash.ToArray(), tx.Sigs[0].SigData[0])
@@ -97,7 +92,7 @@ func TestMultiVerifyTx(t *testing.T) {
 		pubKeys = append(pubKeys, acc.PublicKey)
 	}
 
-	m := uint16((5*len(pubKeys)+6)/7)
+	m := uint16((5*len(pubKeys) + 6) / 7)
 	for _, signer := range signers {
 		err = sdk.MultiSignToTransaction(tx, m, pubKeys, signer)
 		if err != nil {
@@ -116,11 +111,10 @@ func TestMultiVerifyTx(t *testing.T) {
 	if e != nil {
 		fmt.Println("getsignature address error is ", e)
 	} else {
-		multiSigAddr, _ :=  types.AddressFromBookkeepers(pubKeys)
+		multiSigAddr, _ := types.AddressFromBookkeepers(pubKeys)
 		assert.Nil(t, err)
 		for i, addr := range signatureAddr {
 			fmt.Println("signature ", i, ", ", addr.ToBase58(), ", should be ", multiSigAddr.ToBase58())
 		}
 	}
 }
-

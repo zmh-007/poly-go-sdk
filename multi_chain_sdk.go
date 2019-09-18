@@ -28,13 +28,13 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/ontio/ontology-crypto/keypair"
 	"github.com/ontio/multi-chain-go-sdk/client"
 	"github.com/ontio/multi-chain-go-sdk/utils"
 	common2 "github.com/ontio/multi-chain/common"
 	"github.com/ontio/multi-chain/common/constants"
 	"github.com/ontio/multi-chain/core/payload"
 	"github.com/ontio/multi-chain/core/types"
+	"github.com/ontio/ontology-crypto/keypair"
 )
 
 func init() {
@@ -67,6 +67,7 @@ func (this *MultiChainSdk) CreateWallet(walletFile string) (*Wallet, error) {
 func (this *MultiChainSdk) OpenWallet(walletFile string) (*Wallet, error) {
 	return OpenWallet(walletFile)
 }
+
 //
 //func ParseNativeTxPayload(raw []byte) (map[string]interface{}, error) {
 //	tx, err := types.TransactionFromRawBytes(raw)
@@ -355,16 +356,16 @@ func (this *MultiChainSdk) GetPrivateKeyFromMnemonicCodesStrBip44(mnemonicCodesS
 }
 
 //NewInvokeTransaction return smart contract invoke transaction
-func (this *MultiChainSdk) NewInvokeTransaction( invokeCode []byte) *types.Transaction {
+func (this *MultiChainSdk) NewInvokeTransaction(invokeCode []byte) *types.Transaction {
 	invokePayload := &payload.InvokeCode{
 		Code: invokeCode,
 	}
 	tx := &types.Transaction{
 
-		TxType:   types.Invoke,
-		Nonce:    rand.Uint32(),
-		Payload:  invokePayload,
-		Sigs:     make([]types.Sig, 0, 0),
+		TxType:  types.Invoke,
+		Nonce:   rand.Uint32(),
+		Payload: invokePayload,
+		Sigs:    make([]types.Sig, 0, 0),
 	}
 	return tx
 }
@@ -463,6 +464,7 @@ type TransferEvent struct {
 	To       string
 	Amount   uint64
 }
+
 //
 //func (this *MultiChainSdk) ParseNaitveTransferEvent(event *event.NotifyEventInfo) (*TransferEvent, error) {
 //	if event == nil {
@@ -531,4 +533,3 @@ func (this *MultiChainSdk) GetAdddrByPubKey(pubKey keypair.PublicKey) string {
 	address := types.AddressFromPubKey(pubKey)
 	return address.ToBase58()
 }
-
