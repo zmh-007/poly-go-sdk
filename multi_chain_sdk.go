@@ -370,31 +370,31 @@ func (this *MultiChainSdk) NewInvokeTransaction( invokeCode []byte) *types.Trans
 }
 
 func (this *MultiChainSdk) SignToTransaction(tx *types.Transaction, signer Signer) error {
-	//if tx.Payer == common.ADDRESS_EMPTY {
-	//	account, ok := signer.(*Account)
-	//	if ok {
-	//		tx.Payer = account.Address
-	//	}
-	//}
-	for _, sigs := range tx.Sigs {
-		if utils.PubKeysEqual([]keypair.PublicKey{signer.GetPublicKey()}, sigs.PubKeys) {
-			//have already signed
-			return nil
-		}
-	}
 	txHash := tx.Hash()
 	sigData, err := signer.Sign(txHash.ToArray())
 	if err != nil {
 		return fmt.Errorf("sign error:%s", err)
 	}
-	if tx.Sigs == nil {
-		tx.Sigs = make([]types.Sig, 0)
+	hasSig := false
+
+	for i, sig := range tx.Sigs {
+		if len(sig.PubKeys) == 1 && utils.PubKeysEqual([]keypair.PublicKey{signer.GetPublicKey()}, sig.PubKeys) {
+			if utils.HasAlreadySig(txHash.ToArray(), signer.GetPublicKey(), sig.SigData) {
+				//has already signed
+				return nil
+			}
+		}
+		hasSig = true
+		//replace
+		tx.Sigs[i].SigData = [][]byte{sigData}
 	}
-	tx.Sigs = append(tx.Sigs, types.Sig{
-		PubKeys: []keypair.PublicKey{signer.GetPublicKey()},
-		M:       1,
-		SigData: [][]byte{sigData},
-	})
+	if !hasSig {
+		tx.Sigs = append(tx.Sigs, types.Sig{
+			PubKeys: []keypair.PublicKey{signer.GetPublicKey()},
+			M:       1,
+			SigData: [][]byte{sigData},
+		})
+	}
 	return nil
 }
 

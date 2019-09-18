@@ -2,21 +2,23 @@ package test
 
 import (
 	"testing"
+	sig "github.com/ontio/ontology-crypto/signature"
 	mcc "github.com/ontio/multi-chain/common"
-	"github.com/ontio/ontology-crypto/signature"
 	"github.com/ontio/multi-chain-go-sdk"
-	mccv "github.com/ontio/multi-chain/core/validation"
+	"github.com/ontio/multi-chain/core/signature"
+	"github.com/ontio/multi-chain/core/types"
 	"github.com/stretchr/testify/assert"
 	"fmt"
 	"github.com/ontio/ontology-crypto/keypair"
+	"github.com/ontio/multi-chain/common"
 )
 
 
 
 const (
 	privateK1 = "5f2fe68215476abb9852cfa7da31ef00aa1468782d5ca809da5c4e1390b8ee45"
-	privateK2 = "5f2fe68215476abb9852cfa7da31ef00aa1468782d5ca809da5c4e1390b8ee45"
-	privateK3 = "5f2fe68215476abb9852cfa7da31ef00aa1468782d5ca809da5c4e1390b8ee45"
+	privateK2 = "f00dd7f5356e8aee93a049bdccc44ce91169e07ea3bec9f4e0142e456fd39bae"
+	privateK3 = "da213fb4cb1b12269c20307dadda35a7c89869c0c791b777fd8618d4159db99c"
 )
 
 
@@ -24,16 +26,31 @@ func TestVerifyTx(t *testing.T) {
 	sdk := multi_chain_go_sdk.NewMultiChainSdk()
 
 	pri1, _ := mcc.HexToBytes(privateK1)
-	signer, _ := multi_chain_go_sdk.NewAccountFromPrivateKey(pri1, signature.SHA256withECDSA)
+	signer, _ := multi_chain_go_sdk.NewAccountFromPrivateKey(pri1, sig.SHA256withECDSA)
 	tx, _ := sdk.Native.Scm.NewRegisterSideChainTransaction(signer.Address.ToBase58(), 234, "chain167", 1)
 
-	err := sdk.SignToTransaction(tx, signer)
-	//sig, err := acct1.Sign(data)
-	assert.Nil(t, err)
-	fmt.Println("tx is ", tx.ToArray())
+	fmt.Println("before serialization, txHash = ", tx.Hash())
 
-	err = mccv.VerifyTransaction(tx)
-	fmt.Println("err is ", err)
+	sink := common.NewZeroCopySink(nil)
+	err := tx.Serialization(sink)
+	assert.NoError(t, err)
+	tx, err = types.TransactionFromRawBytes(sink.Bytes())
+
+	//Hence, must do serialization
+	fmt.Println("after serialization, txHash = ", tx.Hash())
+
+
+	err = sdk.SignToTransaction(tx, signer)
+	//err = utils.SignTransaction(, tx)
+	assert.Nil(t, err)
+
+
+	hash := tx.Hash()
+	err = signature.Verify(signer.PublicKey, hash.ToArray(), tx.Sigs[0].SigData[0])
+	assert.NoError(t, err)
+	fmt.Println("signature verified !")
+
+	//Below has error
 	signatureAddr, e := tx.GetSignatureAddresses()
 	if e != nil {
 		fmt.Println("getsignature address error is ", e)
@@ -48,41 +65,61 @@ func TestMultiVerifyTx(t *testing.T) {
 	sdk := multi_chain_go_sdk.NewMultiChainSdk()
 
 	pri1, _ := mcc.HexToBytes(privateK1)
-	signer1, _ := multi_chain_go_sdk.NewAccountFromPrivateKey(pri1, signature.SHA256withECDSA)
+	signer1, _ := multi_chain_go_sdk.NewAccountFromPrivateKey(pri1, sig.SHA256withECDSA)
 
-	pri2, _ := mcc.HexToBytes(privateK1)
-	signer2, _ := multi_chain_go_sdk.NewAccountFromPrivateKey(pri2, signature.SHA256withECDSA)
+	pri2, _ := mcc.HexToBytes(privateK2)
+	signer2, _ := multi_chain_go_sdk.NewAccountFromPrivateKey(pri2, sig.SHA256withECDSA)
 
+	pri3, _ := mcc.HexToBytes(privateK3)
+	signer3, _ := multi_chain_go_sdk.NewAccountFromPrivateKey(pri3, sig.SHA256withECDSA)
 
 	tx, err := sdk.Native.Scm.NewApproveRegisterSideChainTransaction(112)
+
+	fmt.Println("before serialization, txHash = ", tx.Hash())
+
+	sink := common.NewZeroCopySink(nil)
+	e := tx.Serialization(sink)
+	assert.NoError(t, e)
+
+	tx, err = types.TransactionFromRawBytes(sink.Bytes())
+
+	//Hence, must do serialization
+	fmt.Println("after serialization, txHash = ", tx.Hash())
 
 	signers := make([]*multi_chain_go_sdk.Account, 0)
 	signers = append(signers, signer1)
 	signers = append(signers, signer2)
+	signers = append(signers, signer3)
 
+	//Do multi sign
 	pubKeys := make([]keypair.PublicKey, 0)
 	for _, acc := range signers {
 		pubKeys = append(pubKeys, acc.PublicKey)
 	}
 
+	m := uint16((5*len(pubKeys)+6)/7)
 	for _, signer := range signers {
-		err = sdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
+		err = sdk.MultiSignToTransaction(tx, m, pubKeys, signer)
 		if err != nil {
 			fmt.Println("multisign error is ", err)
 		}
 	}
 
+	//Verify Multi sign
+	hash := tx.Hash()
+	err = signature.VerifyMultiSignature(hash.ToArray(), tx.Sigs[0].PubKeys, int(m), tx.Sigs[0].SigData)
+	fmt.Println("verifyMultiSignature err is ", err)
 
-	fmt.Println("tx is ", tx.ToArray())
-
-	err = mccv.VerifyTransaction(tx)
-	fmt.Println("err is ", err)
+	// restore sign addr
 	signatureAddr, e := tx.GetSignatureAddresses()
+
 	if e != nil {
 		fmt.Println("getsignature address error is ", e)
 	} else {
+		multiSigAddr, _ :=  types.AddressFromBookkeepers(pubKeys)
+		assert.Nil(t, err)
 		for i, addr := range signatureAddr {
-			fmt.Println("signature ", i, ", ", addr.ToBase58(), ", should be ", signers[i].Address.ToBase58())
+			fmt.Println("signature ", i, ", ", addr.ToBase58(), ", should be ", multiSigAddr.ToBase58())
 		}
 	}
 }
