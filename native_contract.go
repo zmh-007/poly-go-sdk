@@ -236,8 +236,9 @@ func (this *HeaderSync) SyncGenesisHeader(chainId uint64, genesisHeader []byte, 
 }
 
 
-func (this *HeaderSync) NewSyncBlockHeaderTransaction(address common.Address, headers [][]byte) (*types.Transaction, error) {
+func (this *HeaderSync) NewSyncBlockHeaderTransaction(chainId uint64, address common.Address, headers [][]byte) (*types.Transaction, error) {
 	state := &hsc.SyncBlockHeaderParam{
+		ChainID: chainId,
 		Address:  address,
 		Headers: headers,
 	}
@@ -255,8 +256,8 @@ func (this *HeaderSync) NewSyncBlockHeaderTransaction(address common.Address, he
 		sink.Bytes())
 }
 
-func (this *HeaderSync) SyncBlockHeader(address common.Address, headers [][]byte, signer *Account) (common.Uint256, error) {
-	tx, err := this.NewSyncBlockHeaderTransaction(address, headers)
+func (this *HeaderSync) SyncBlockHeader(chainId uint64, address common.Address, headers [][]byte, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewSyncBlockHeaderTransaction(chainId, address, headers)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
