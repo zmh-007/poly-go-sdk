@@ -331,10 +331,7 @@ func (this *SideChainManager) NewApproveRegisterSideChainTransaction(chainId uin
 	}
 
 	sink := new(common.ZeroCopySink)
-	err := state.Serialization(sink)
-	if err != nil {
-		return nil, fmt.Errorf("Parameter Serilization error: %s", err)
-	}
+	state.Serialization(sink)
 
 	return this.native.NewNativeInvokeTransaction(
 		SIDE_CHAIN_MANAGER_CONTRACT_VERSION,
@@ -407,10 +404,7 @@ func (this *SideChainManager) NewApproveUpdateSideChainTransaction(chainId uint6
 	}
 
 	sink := new(common.ZeroCopySink)
-	err := state.Serialization(sink)
-	if err != nil {
-		return nil, fmt.Errorf("Parameter Serilization error: %s", err)
-	}
+	state.Serialization(sink)
 
 	return this.native.NewNativeInvokeTransaction(
 		SIDE_CHAIN_MANAGER_CONTRACT_VERSION,
@@ -448,10 +442,7 @@ func (this *SideChainManager) NewRemoveSideChainTransaction(chainId uint64) (*ty
 	}
 
 	sink := new(common.ZeroCopySink)
-	err := state.Serialization(sink)
-	if err != nil {
-		return nil, fmt.Errorf("Parameter Serilization error: %s", err)
-	}
+	state.Serialization(sink)
 
 	return this.native.NewNativeInvokeTransaction(
 		SIDE_CHAIN_MANAGER_CONTRACT_VERSION,
