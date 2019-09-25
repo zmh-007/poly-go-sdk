@@ -30,7 +30,7 @@ import (
 
 	"github.com/ontio/multi-chain-go-sdk/client"
 	"github.com/ontio/multi-chain-go-sdk/utils"
-	common2 "github.com/ontio/multi-chain/common"
+	 "github.com/ontio/multi-chain/common"
 	"github.com/ontio/multi-chain/common/constants"
 	"github.com/ontio/multi-chain/core/payload"
 	"github.com/ontio/multi-chain/core/types"
@@ -285,7 +285,7 @@ func (this *MultiChainSdk) OpenWallet(walletFile string) (*Wallet, error) {
 //	}
 //}
 //
-//func readAddress(source *common.ZeroCopySource) (common2.Address, error) {
+//func readAddress(source *common.ZeroCopySource) (common.Address, error) {
 //	senderBytes, _, irregular, eof := source.NextVarBytes()
 //	if irregular || eof {
 //		return common.ADDRESS_EMPTY, io.ErrUnexpectedEOF
@@ -367,6 +367,12 @@ func (this *MultiChainSdk) NewInvokeTransaction(invokeCode []byte) *types.Transa
 		Payload: invokePayload,
 		Sigs:    make([]types.Sig, 0, 0),
 	}
+	sink := common.NewZeroCopySink(nil)
+	err := tx.Serialization(sink)
+	if err != nil {
+		return &types.Transaction{}
+	}
+	tx, err = types.TransactionFromRawBytes(sink.Bytes())
 	return tx
 }
 
@@ -452,7 +458,7 @@ func (this *MultiChainSdk) MultiSignToTransaction(tx *types.Transaction, m uint1
 }
 
 func (this *MultiChainSdk) GetTxData(tx *types.Transaction) (string, error) {
-	sink := common2.ZeroCopySink{}
+	sink := common.ZeroCopySink{}
 	tx.Serialization(&sink)
 	rawtx := hex.EncodeToString(sink.Bytes())
 	return rawtx, nil
