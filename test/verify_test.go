@@ -26,26 +26,19 @@ func TestVerifyTx(t *testing.T) {
 	signer, _ := multi_chain_go_sdk.NewAccountFromPrivateKey(pri1, sig.SHA256withECDSA)
 	tx, _ := sdk.Native.Scm.NewRegisterSideChainTransaction(signer.Address.ToBase58(), 234, "chain167", 1)
 
-	fmt.Println("before serialization, txHash = ", tx.Hash())
+
+
+	err := sdk.SignToTransaction(tx, signer)
+
 
 	sink := common.NewZeroCopySink(nil)
-	err := tx.Serialization(sink)
+	err = tx.Serialization(sink)
 	assert.NoError(t, err)
 	tx, err = types.TransactionFromRawBytes(sink.Bytes())
 
 	//Hence, must do serialization
 	fmt.Println("after serialization, txHash = ", tx.Hash())
 
-	err = sdk.SignToTransaction(tx, signer)
-	//err = utils.SignTransaction(, tx)
-	assert.Nil(t, err)
-
-	hash := tx.Hash()
-	err = signature.Verify(signer.PublicKey, hash.ToArray(), tx.Sigs[0].SigData[0])
-	assert.NoError(t, err)
-	fmt.Println("signature verified !")
-
-	//Below has error
 	signatureAddr, e := tx.GetSignatureAddresses()
 	if e != nil {
 		fmt.Println("getsignature address error is ", e)
