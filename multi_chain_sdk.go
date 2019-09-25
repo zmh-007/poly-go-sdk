@@ -30,7 +30,7 @@ import (
 
 	"github.com/ontio/multi-chain-go-sdk/client"
 	"github.com/ontio/multi-chain-go-sdk/utils"
-	 "github.com/ontio/multi-chain/common"
+	"github.com/ontio/multi-chain/common"
 	"github.com/ontio/multi-chain/common/constants"
 	"github.com/ontio/multi-chain/core/payload"
 	"github.com/ontio/multi-chain/core/types"
