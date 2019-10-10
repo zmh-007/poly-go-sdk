@@ -103,7 +103,7 @@ type CrossChainManager struct {
 	native *NativeContract
 }
 
-func (this *CrossChainManager) NewVoteTransaction(fromChainId uint64, address string, txHash string) (*types.Transaction, error) {
+func (this *CrossChainManager) NewVoteTransaction(address string, txHash string) (*types.Transaction, error) {
 	txHashU, e := common.Uint256FromHexString(txHash)
 	if e != nil {
 		fmt.Printf("txHash illegal error ", e)
@@ -111,7 +111,6 @@ func (this *CrossChainManager) NewVoteTransaction(fromChainId uint64, address st
 	}
 	txHashBs := txHashU.ToArray()
 	state := &nccmc.VoteParam{
-		FromChainID: fromChainId,
 		Address:     address,
 		TxHash:      txHashBs,
 	}
@@ -129,8 +128,8 @@ func (this *CrossChainManager) NewVoteTransaction(fromChainId uint64, address st
 		sink.Bytes())
 }
 
-func (this *CrossChainManager) Vote(fromChainId uint64, address string, txHash string, signer *Account) (common.Uint256, error) {
-	tx, err := this.NewVoteTransaction(fromChainId, address, txHash)
+func (this *CrossChainManager) Vote(address string, txHash string, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewVoteTransaction(address, txHash)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
