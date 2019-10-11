@@ -103,6 +103,37 @@ type CrossChainManager struct {
 	native *NativeContract
 }
 
+func (this *CrossChainManager) NewBtcMultiSignTransaction(txHash []byte, address string, signs [][]byte) (*types.Transaction, error) {
+
+	state := &nccmc.MultiSignParam{
+		TxHash:  txHash,
+		Address: address,
+		Signs:   signs,
+	}
+
+	sink := new(common.ZeroCopySink)
+	state.Serialization(sink)
+
+	return this.native.NewNativeInvokeTransaction(
+		CROSS_CHAIN_MANAGER_CONTRACT_VERSION,
+		CrossChainManagerContractAddress,
+		ccm.MULTI_SIGN,
+		sink.Bytes())
+}
+
+func (this *CrossChainManager) BtcMultiSign(txHash []byte, address string, signs [][]byte, signer *Account) (common.Uint256, error) {
+
+	tx, err := this.NewBtcMultiSignTransaction(txHash, address, signs)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	err = this.mcSdk.SignToTransaction(tx, signer)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	return this.mcSdk.SendTransaction(tx)
+}
+
 func (this *CrossChainManager) NewVoteTransaction(address string, txHash string) (*types.Transaction, error) {
 	txHashU, e := common.Uint256FromHexString(txHash)
 	if e != nil {
@@ -111,8 +142,8 @@ func (this *CrossChainManager) NewVoteTransaction(address string, txHash string)
 	}
 	txHashBs := txHashU.ToArray()
 	state := &nccmc.VoteParam{
-		Address:     address,
-		TxHash:      txHashBs,
+		Address: address,
+		TxHash:  txHashBs,
 	}
 
 	sink := new(common.ZeroCopySink)
