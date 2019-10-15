@@ -492,11 +492,11 @@ func (this *SideChainManager) RemoveSideChain(chainId uint64, signer *Account) (
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *SideChainManager) NewAssetMappingTransaction(address string, assetName string, assetList []*scm.Asset) (*types.Transaction, error) {
-	state := &scm.AssetMappingParam{
+func (this *SideChainManager) NewAssetMappingTransaction(address string, assetName string, assetList []*scm.CrossChainContract) (*types.Transaction, error) {
+	state := &scm.CrossChainContractMappingParam{
 		Address:   address,
-		AssetName: assetName,
-		AssetList: assetList,
+		CrossChainContractName: assetName,
+		CrossChainContractList: assetList,
 	}
 
 	sink := new(common.ZeroCopySink)
@@ -508,10 +508,10 @@ func (this *SideChainManager) NewAssetMappingTransaction(address string, assetNa
 	return this.native.NewNativeInvokeTransaction(
 		SIDE_CHAIN_MANAGER_CONTRACT_VERSION,
 		SideChainManagerContractAddress,
-		scm.ASSET_MAPPING,
+		scm.CROSS_CHAIN_CONTRACT_MAPPING,
 		sink.Bytes())
 }
-func (this *SideChainManager) AssetMapping(address string, assetName string, assetList []*scm.Asset, signer *Account) (common.Uint256, error) {
+func (this *SideChainManager) AssetMapping(address string, assetName string, assetList []*scm.CrossChainContract, signer *Account) (common.Uint256, error) {
 	tx, err := this.NewAssetMappingTransaction(address, assetName, assetList)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -529,8 +529,8 @@ func (this *SideChainManager) AssetMapping(address string, assetName string, ass
 }
 
 func (this *SideChainManager) NewApproveAssetMappingTransaction(assetName string) (*types.Transaction, error) {
-	state := &scm.ApproveAssetMappingParam{
-		AssetName: assetName,
+	state := &scm.ApproveCrossChainContractMappingParam{
+		CrossChainContractName: assetName,
 	}
 	sink := new(common.ZeroCopySink)
 	err := state.Serialization(sink)
@@ -541,7 +541,7 @@ func (this *SideChainManager) NewApproveAssetMappingTransaction(assetName string
 	return this.native.NewNativeInvokeTransaction(
 		SIDE_CHAIN_MANAGER_CONTRACT_VERSION,
 		SideChainManagerContractAddress,
-		scm.APPROVE_ASSET_MAPPING,
+		scm.APPROVE_CROSS_CHAIN_CONTRACT_MAPPING,
 		sink.Bytes())
 }
 
