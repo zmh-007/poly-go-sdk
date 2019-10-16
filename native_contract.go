@@ -103,6 +103,46 @@ type CrossChainManager struct {
 	native *NativeContract
 }
 
+func (this *CrossChainManager) NewInitRedeemScriptTransaction(redeemScript string) (*types.Transaction, error) {
+
+	state := &nccmc.InitRedeemScriptParam{
+		RedeemScript: redeemScript,
+	}
+
+	sink := new(common.ZeroCopySink)
+	state.Serialization(sink)
+
+	return this.native.NewNativeInvokeTransaction(
+		CROSS_CHAIN_MANAGER_CONTRACT_VERSION,
+		CrossChainManagerContractAddress,
+		ccm.INIT_REDEEM_SCRIPT,
+		sink.Bytes())
+}
+
+func (this *CrossChainManager) InitRedeemScript(redeemScript string, signers []*Account) (common.Uint256, error) {
+	tx, err := this.NewInitRedeemScriptTransaction(redeemScript)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+
+	pubKeys := make([]keypair.PublicKey, 0)
+	for _, acc := range signers {
+		pubKeys = append(pubKeys, acc.PublicKey)
+	}
+
+	for _, signer := range signers {
+		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
+		if err != nil {
+			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
+		}
+	}
+
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	return this.mcSdk.SendTransaction(tx)
+}
+
 func (this *CrossChainManager) NewBtcMultiSignTransaction(txHash []byte, address string, signs [][]byte) (*types.Transaction, error) {
 
 	state := &nccmc.MultiSignParam{
@@ -494,7 +534,7 @@ func (this *SideChainManager) RemoveSideChain(chainId uint64, signer *Account) (
 
 func (this *SideChainManager) NewAssetMappingTransaction(address string, assetName string, assetList []*scm.CrossChainContract) (*types.Transaction, error) {
 	state := &scm.CrossChainContractMappingParam{
-		Address:   address,
+		Address:                address,
 		CrossChainContractName: assetName,
 		CrossChainContractList: assetList,
 	}
