@@ -211,16 +211,15 @@ func (this *CrossChainManager) Vote(address string, txHash string, signer *Accou
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *CrossChainManager) NewImportOuterTransferTransaction(sourceChainId uint64, txData string, height uint32, proof string, relayerAddress string, targetChainId uint64, value string) (*types.Transaction, error) {
+func (this *CrossChainManager) NewImportOuterTransferTransaction(sourceChainId uint64, txData []byte, height uint32,
+	proof []byte, relayerAddress []byte) (*types.Transaction, error) {
 
 	state := &nccmc.EntranceParam{
 		SourceChainID:  sourceChainId,
-		TxData:         txData,
 		Height:         height,
 		Proof:          proof,
 		RelayerAddress: relayerAddress,
-		TargetChainID:  targetChainId,
-		Value:          value,
+		Extra:          txData,
 	}
 
 	sink := new(common.ZeroCopySink)
@@ -236,9 +235,10 @@ func (this *CrossChainManager) NewImportOuterTransferTransaction(sourceChainId u
 		sink.Bytes())
 }
 
-func (this *CrossChainManager) ImportOuterTransfer(sourceChainId uint64, txData string, height uint32, proof string, relayerAddress string, targetChainId uint64, value string, signer *Account) (common.Uint256, error) {
+func (this *CrossChainManager) ImportOuterTransfer(sourceChainId uint64, txData []byte, height uint32, proof []byte,
+	relayerAddress []byte, signer *Account) (common.Uint256, error) {
 
-	tx, err := this.NewImportOuterTransferTransaction(sourceChainId, txData, height, proof, relayerAddress, targetChainId, value)
+	tx, err := this.NewImportOuterTransferTransaction(sourceChainId, txData, height, proof, relayerAddress)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
@@ -526,84 +526,6 @@ func (this *SideChainManager) RemoveSideChain(chainId uint64, signer *Account) (
 		return common.UINT256_EMPTY, err
 	}
 	err = this.mcSdk.SignToTransaction(tx, signer)
-	if err != nil {
-		return common.UINT256_EMPTY, err
-	}
-	return this.mcSdk.SendTransaction(tx)
-}
-
-func (this *SideChainManager) NewAssetMappingTransaction(address string, assetName string, assetList []*scm.CrossChainContract) (*types.Transaction, error) {
-	state := &scm.CrossChainContractMappingParam{
-		Address:                address,
-		CrossChainContractName: assetName,
-		CrossChainContractList: assetList,
-	}
-
-	sink := new(common.ZeroCopySink)
-	err := state.Serialization(sink)
-	if err != nil {
-		return nil, fmt.Errorf("Parameter Serilization error: %s", err)
-	}
-
-	return this.native.NewNativeInvokeTransaction(
-		SIDE_CHAIN_MANAGER_CONTRACT_VERSION,
-		SideChainManagerContractAddress,
-		scm.CROSS_CHAIN_CONTRACT_MAPPING,
-		sink.Bytes())
-}
-func (this *SideChainManager) AssetMapping(address string, assetName string, assetList []*scm.CrossChainContract, signer *Account) (common.Uint256, error) {
-	tx, err := this.NewAssetMappingTransaction(address, assetName, assetList)
-	if err != nil {
-		return common.UINT256_EMPTY, err
-	}
-
-	err = this.mcSdk.SignToTransaction(tx, signer)
-	if err != nil {
-		return common.UINT256_EMPTY, err
-	}
-
-	if err != nil {
-		return common.UINT256_EMPTY, err
-	}
-	return this.mcSdk.SendTransaction(tx)
-}
-
-func (this *SideChainManager) NewApproveAssetMappingTransaction(assetName string) (*types.Transaction, error) {
-	state := &scm.ApproveCrossChainContractMappingParam{
-		CrossChainContractName: assetName,
-	}
-	sink := new(common.ZeroCopySink)
-	err := state.Serialization(sink)
-	if err != nil {
-		return nil, fmt.Errorf("Parameter Serilization error: %s", err)
-	}
-
-	return this.native.NewNativeInvokeTransaction(
-		SIDE_CHAIN_MANAGER_CONTRACT_VERSION,
-		SideChainManagerContractAddress,
-		scm.APPROVE_CROSS_CHAIN_CONTRACT_MAPPING,
-		sink.Bytes())
-}
-
-func (this *SideChainManager) ApproveAssetMapping(assetName string, signers []*Account) (common.Uint256, error) {
-	tx, err := this.NewApproveAssetMappingTransaction(assetName)
-
-	if err != nil {
-		return common.UINT256_EMPTY, err
-	}
-
-	pubKeys := make([]keypair.PublicKey, 0)
-	for _, acc := range signers {
-		pubKeys = append(pubKeys, acc.PublicKey)
-	}
-
-	for _, signer := range signers {
-		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
-		if err != nil {
-			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
-		}
-	}
-
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
