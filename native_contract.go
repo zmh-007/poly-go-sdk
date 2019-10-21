@@ -174,7 +174,7 @@ func (this *CrossChainManager) BtcMultiSign(txHash []byte, address string, signs
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *CrossChainManager) NewVoteTransaction(address string, txHash string) (*types.Transaction, error) {
+func (this *CrossChainManager) NewVoteTransaction(fromChainID uint64, address string, txHash string) (*types.Transaction, error) {
 	txHashU, e := common.Uint256FromHexString(txHash)
 	if e != nil {
 		fmt.Printf("txHash illegal error ", e)
@@ -182,8 +182,9 @@ func (this *CrossChainManager) NewVoteTransaction(address string, txHash string)
 	}
 	txHashBs := txHashU.ToArray()
 	state := &nccmc.VoteParam{
-		Address: address,
-		TxHash:  txHashBs,
+		FromChainID: fromChainID,
+		Address:     address,
+		TxHash:      txHashBs,
 	}
 
 	sink := new(common.ZeroCopySink)
@@ -199,8 +200,8 @@ func (this *CrossChainManager) NewVoteTransaction(address string, txHash string)
 		sink.Bytes())
 }
 
-func (this *CrossChainManager) Vote(address string, txHash string, signer *Account) (common.Uint256, error) {
-	tx, err := this.NewVoteTransaction(address, txHash)
+func (this *CrossChainManager) Vote(fromChainID uint64, address string, txHash string, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewVoteTransaction(fromChainID, address, txHash)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
@@ -361,11 +362,12 @@ type SideChainManager struct {
 	native *NativeContract
 }
 
-func (this *SideChainManager) NewRegisterSideChainTransaction(address string, chainId uint64, name string, blocksToWait uint64) (*types.Transaction, error) {
+func (this *SideChainManager) NewRegisterSideChainTransaction(address string, chainId, router uint64, name string, blocksToWait uint64) (*types.Transaction, error) {
 
 	state := &scm.RegisterSideChainParam{
 		Address:      address,
 		ChainId:      chainId,
+		Router:       router,
 		Name:         name,
 		BlocksToWait: blocksToWait,
 	}
@@ -382,9 +384,9 @@ func (this *SideChainManager) NewRegisterSideChainTransaction(address string, ch
 		scm.REGISTER_SIDE_CHAIN,
 		sink.Bytes())
 }
-func (this *SideChainManager) RegisterSideChain(address string, chainId uint64, name string, blocksToWait uint64, signer *Account) (common.Uint256, error) {
+func (this *SideChainManager) RegisterSideChain(address string, chainId, router uint64, name string, blocksToWait uint64, signer *Account) (common.Uint256, error) {
 
-	tx, err := this.NewRegisterSideChainTransaction(address, chainId, name, blocksToWait)
+	tx, err := this.NewRegisterSideChainTransaction(address, chainId, router, name, blocksToWait)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
@@ -435,11 +437,12 @@ func (this *SideChainManager) ApproveRegisterSideChain(chainId uint64, signers [
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *SideChainManager) NewUpdateSideChainTransaction(address string, chainId uint64, name string, blocksToWait uint64) (*types.Transaction, error) {
+func (this *SideChainManager) NewUpdateSideChainTransaction(address string, chainId, router uint64, name string, blocksToWait uint64) (*types.Transaction, error) {
 
 	state := &scm.RegisterSideChainParam{
 		Address:      address,
 		ChainId:      chainId,
+		Router:       router,
 		Name:         name,
 		BlocksToWait: blocksToWait,
 	}
@@ -456,9 +459,9 @@ func (this *SideChainManager) NewUpdateSideChainTransaction(address string, chai
 		scm.UPDATE_SIDE_CHAIN,
 		sink.Bytes())
 }
-func (this *SideChainManager) UpdateSideChain(address string, chainId uint64, name string, blocksToWait uint64, signer *Account) (common.Uint256, error) {
+func (this *SideChainManager) UpdateSideChain(address string, chainId, router uint64, name string, blocksToWait uint64, signer *Account) (common.Uint256, error) {
 
-	tx, err := this.NewRegisterSideChainTransaction(address, chainId, name, blocksToWait)
+	tx, err := this.NewUpdateSideChainTransaction(address, chainId, router, name, blocksToWait)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
