@@ -834,89 +834,11 @@ func (this *RelayerManager) NewRegisterRelayerTransaction(address []byte) (*type
 		relayer_manager.REGISTER_RELAYER,
 		sink.Bytes())
 }
-func (this *RelayerManager) RegisterRelayer(address []byte, signer *Account) (common.Uint256, error) {
+func (this *RelayerManager) RegisterRelayer(address []byte, signers []*Account) (common.Uint256, error) {
 	tx, err := this.NewRegisterRelayerTransaction(address)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
-	err = this.mcSdk.SignToTransaction(tx, signer)
-	if err != nil {
-		return common.UINT256_EMPTY, err
-	}
-	return this.mcSdk.SendTransaction(tx)
-}
-
-func (this *RelayerManager) NewUnRegisterRelayerTransaction(address []byte) (*types.Transaction, error) {
-	state := &relayer_manager.RelayerParam{
-		Address: address,
-	}
-
-	sink := new(common.ZeroCopySink)
-	state.Serialization(sink)
-
-	return this.native.NewNativeInvokeTransaction(
-		TX_VERSION,
-		RelayerManagerContractAddress,
-		relayer_manager.UNREGISTER_RELAYER,
-		sink.Bytes())
-}
-func (this *RelayerManager) UnRegisterRelayer(address []byte, signer *Account) (common.Uint256, error) {
-	tx, err := this.NewUnRegisterRelayerTransaction(address)
-	if err != nil {
-		return common.UINT256_EMPTY, err
-	}
-	err = this.mcSdk.SignToTransaction(tx, signer)
-	if err != nil {
-		return common.UINT256_EMPTY, err
-	}
-	return this.mcSdk.SendTransaction(tx)
-}
-
-func (this *RelayerManager) NewQuitRelayerTransaction(address []byte) (*types.Transaction, error) {
-	state := &relayer_manager.RelayerParam{
-		Address: address,
-	}
-
-	sink := new(common.ZeroCopySink)
-	state.Serialization(sink)
-
-	return this.native.NewNativeInvokeTransaction(
-		TX_VERSION,
-		RelayerManagerContractAddress,
-		relayer_manager.QUIT_RELAYER,
-		sink.Bytes())
-}
-func (this *RelayerManager) QuitRelayer(address []byte, signer *Account) (common.Uint256, error) {
-	tx, err := this.NewQuitRelayerTransaction(address)
-	if err != nil {
-		return common.UINT256_EMPTY, err
-	}
-	err = this.mcSdk.SignToTransaction(tx, signer)
-	if err != nil {
-		return common.UINT256_EMPTY, err
-	}
-	return this.mcSdk.SendTransaction(tx)
-}
-
-func (this *RelayerManager) NewApproveRelayerTransaction(address []byte) (*types.Transaction, error) {
-	state := &relayer_manager.RelayerParam{
-		Address: address,
-	}
-
-	sink := new(common.ZeroCopySink)
-	state.Serialization(sink)
-
-	return this.native.NewNativeInvokeTransaction(
-		TX_VERSION,
-		RelayerManagerContractAddress,
-		relayer_manager.APPROVE_RELAYER,
-		sink.Bytes())
-}
-func (this *RelayerManager) ApproveRelayer(address []byte, signers []*Account) (common.Uint256, error) {
-	tx, err := this.NewApproveRelayerTransaction(address)
-	if err != nil {
-		return common.UINT256_EMPTY, err
-	}
 
 	pubKeys := make([]keypair.PublicKey, 0)
 	for _, acc := range signers {
@@ -936,7 +858,7 @@ func (this *RelayerManager) ApproveRelayer(address []byte, signers []*Account) (
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *RelayerManager) NewRejectRelayerTransaction(address []byte) (*types.Transaction, error) {
+func (this *RelayerManager) NewRemoveRelayerTransaction(address []byte) (*types.Transaction, error) {
 	state := &relayer_manager.RelayerParam{
 		Address: address,
 	}
@@ -947,87 +869,11 @@ func (this *RelayerManager) NewRejectRelayerTransaction(address []byte) (*types.
 	return this.native.NewNativeInvokeTransaction(
 		TX_VERSION,
 		RelayerManagerContractAddress,
-		relayer_manager.REJECT_RELAYER,
+		relayer_manager.REMOVE_RELAYER,
 		sink.Bytes())
 }
-func (this *RelayerManager) RejectRelayer(address []byte, signers []*Account) (common.Uint256, error) {
-	tx, err := this.NewRejectRelayerTransaction(address)
-	if err != nil {
-		return common.UINT256_EMPTY, err
-	}
-
-	pubKeys := make([]keypair.PublicKey, 0)
-	for _, acc := range signers {
-		pubKeys = append(pubKeys, acc.PublicKey)
-	}
-
-	for _, signer := range signers {
-		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
-		if err != nil {
-			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
-		}
-	}
-
-	if err != nil {
-		return common.UINT256_EMPTY, err
-	}
-	return this.mcSdk.SendTransaction(tx)
-}
-
-func (this *RelayerManager) NewBlackRelayerTransaction(addressList [][]byte) (*types.Transaction, error) {
-	state := &relayer_manager.RelayerListParam{
-		AddressList: addressList,
-	}
-
-	sink := new(common.ZeroCopySink)
-	state.Serialization(sink)
-
-	return this.native.NewNativeInvokeTransaction(
-		TX_VERSION,
-		RelayerManagerContractAddress,
-		relayer_manager.BLACK_RELAYER,
-		sink.Bytes())
-}
-func (this *RelayerManager) BlackRelayer(addressList [][]byte, signers []*Account) (common.Uint256, error) {
-	tx, err := this.NewBlackRelayerTransaction(addressList)
-	if err != nil {
-		return common.UINT256_EMPTY, err
-	}
-
-	pubKeys := make([]keypair.PublicKey, 0)
-	for _, acc := range signers {
-		pubKeys = append(pubKeys, acc.PublicKey)
-	}
-
-	for _, signer := range signers {
-		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
-		if err != nil {
-			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
-		}
-	}
-
-	if err != nil {
-		return common.UINT256_EMPTY, err
-	}
-	return this.mcSdk.SendTransaction(tx)
-}
-
-func (this *RelayerManager) NewWhiteRelayerTransaction(address []byte) (*types.Transaction, error) {
-	state := &relayer_manager.RelayerParam{
-		Address: address,
-	}
-
-	sink := new(common.ZeroCopySink)
-	state.Serialization(sink)
-
-	return this.native.NewNativeInvokeTransaction(
-		TX_VERSION,
-		RelayerManagerContractAddress,
-		relayer_manager.WHITE_RELAYER,
-		sink.Bytes())
-}
-func (this *RelayerManager) WhiteRelayer(address []byte, signers []*Account) (common.Uint256, error) {
-	tx, err := this.NewWhiteRelayerTransaction(address)
+func (this *RelayerManager) RemoveRelayer(address []byte, signers []*Account) (common.Uint256, error) {
+	tx, err := this.NewRemoveRelayerTransaction(address)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
