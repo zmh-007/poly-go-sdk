@@ -200,22 +200,20 @@ func (this *CrossChainManager) Vote(fromChainID uint64, address string, txHash s
 }
 
 func (this *CrossChainManager) NewImportOuterTransferTransaction(sourceChainId uint64, txHash, txData []byte, height uint32,
-	proof []byte, relayerAddress []byte) (*types.Transaction, error) {
+	proof []byte, relayerAddress []byte, HeaderOrCrossChainMsg []byte) (*types.Transaction, error) {
 
 	state := &nccmc.EntranceParam{
-		SourceChainID:  sourceChainId,
-		TxHash:         txHash,
-		Height:         height,
-		Proof:          proof,
-		RelayerAddress: relayerAddress,
-		Extra:          txData,
+		SourceChainID:         sourceChainId,
+		TxHash:                txHash,
+		Height:                height,
+		Proof:                 proof,
+		RelayerAddress:        relayerAddress,
+		Extra:                 txData,
+		HeaderOrCrossChainMsg: HeaderOrCrossChainMsg,
 	}
 
 	sink := new(common.ZeroCopySink)
 	state.Serialization(sink)
-	//if err != nil {
-	//	return nil, fmt.Errorf("Parameter Serilization error: %s", err)
-	//}
 
 	return this.native.NewNativeInvokeTransaction(
 		TX_VERSION,
@@ -225,9 +223,9 @@ func (this *CrossChainManager) NewImportOuterTransferTransaction(sourceChainId u
 }
 
 func (this *CrossChainManager) ImportOuterTransfer(sourceChainId uint64, txHash, txData []byte, height uint32, proof []byte,
-	relayerAddress []byte, signer *Account) (common.Uint256, error) {
+	relayerAddress []byte, HeaderOrCrossChainMsg []byte, signer *Account) (common.Uint256, error) {
 
-	tx, err := this.NewImportOuterTransferTransaction(sourceChainId, txHash, txData, height, proof, relayerAddress)
+	tx, err := this.NewImportOuterTransferTransaction(sourceChainId, txHash, txData, height, proof, relayerAddress, HeaderOrCrossChainMsg)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
@@ -316,10 +314,11 @@ func (this *HeaderSync) SyncBlockHeader(chainId uint64, address common.Address, 
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *HeaderSync) NewSyncGenesisTransaction(chainId uint64, genesisHeader []byte) (*types.Transaction, error) {
-	state := &hsc.SyncGenesisHeaderParam{
-		ChainID:       chainId,
-		GenesisHeader: genesisHeader,
+func (this *HeaderSync) NewSyncCrossChainMsgTransaction(chainId uint64, address common.Address, crossChainMsg [][]byte) (*types.Transaction, error) {
+	state := &hsc.SyncCrossChainMsgParam{
+		ChainID:        chainId,
+		Address:        address,
+		CrossChainMsgs: crossChainMsg,
 	}
 
 	sink := new(common.ZeroCopySink)
@@ -328,12 +327,12 @@ func (this *HeaderSync) NewSyncGenesisTransaction(chainId uint64, genesisHeader 
 	return this.native.NewNativeInvokeTransaction(
 		TX_VERSION,
 		HeaderSyncContractAddress,
-		hs.SYNC_GENESIS_HEADER,
+		hs.SYNC_CROSS_CHAIN_MSG,
 		sink.Bytes())
 }
 
-func (this *HeaderSync) SyncGenesisPeers(chainId uint64, genesisHeader []byte, signer *Account) (common.Uint256, error) {
-	tx, err := this.NewSyncGenesisTransaction(chainId, genesisHeader)
+func (this *HeaderSync) SyncCrossChainMsg(chainId uint64, address common.Address, crossChainMsg [][]byte, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewSyncCrossChainMsgTransaction(chainId, address, crossChainMsg)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
