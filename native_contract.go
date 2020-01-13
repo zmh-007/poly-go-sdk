@@ -90,15 +90,14 @@ type CrossChainManager struct {
 	native *NativeContract
 }
 
-
 func (this *CrossChainManager) NewBtcMultiSignTransaction(chainId uint64, redeemKey string, txHash []byte, address string, signs [][]byte) (*types.Transaction, error) {
 
 	state := &nccmc.MultiSignParam{
-		ChainID: chainId,
+		ChainID:   chainId,
 		RedeemKey: redeemKey,
-		TxHash:  txHash,
-		Address: address,
-		Signs:   signs,
+		TxHash:    txHash,
+		Address:   address,
+		Signs:     signs,
 	}
 
 	sink := new(common.ZeroCopySink)
