@@ -24,7 +24,7 @@ func TestVerifyTx(t *testing.T) {
 
 	pri1, _ := mcc.HexToBytes(privateK1)
 	signer, _ := multi_chain_go_sdk.NewAccountFromPrivateKey(pri1, sig.SHA256withECDSA)
-	tx, _ := sdk.Native.Scm.NewRegisterSideChainTransaction(signer.Address.ToBase58(), 234, "chain167", 1)
+	tx, _ := sdk.Native.Scm.NewRegisterSideChainTransaction(signer.Address.ToBase58(), 234, 2, "chain167", 1)
 
 	err := sdk.SignToTransaction(tx, signer)
 

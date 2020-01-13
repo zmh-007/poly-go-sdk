@@ -90,49 +90,12 @@ type CrossChainManager struct {
 	native *NativeContract
 }
 
-func (this *CrossChainManager) NewInitRedeemScriptTransaction(redeemScript string) (*types.Transaction, error) {
 
-	state := &nccmc.InitRedeemScriptParam{
-		RedeemScript: redeemScript,
-	}
-
-	sink := new(common.ZeroCopySink)
-	state.Serialization(sink)
-
-	return this.native.NewNativeInvokeTransaction(
-		TX_VERSION,
-		CrossChainManagerContractAddress,
-		ccm.INIT_REDEEM_SCRIPT,
-		sink.Bytes())
-}
-
-func (this *CrossChainManager) InitRedeemScript(redeemScript string, signers []*Account) (common.Uint256, error) {
-	tx, err := this.NewInitRedeemScriptTransaction(redeemScript)
-	if err != nil {
-		return common.UINT256_EMPTY, err
-	}
-
-	pubKeys := make([]keypair.PublicKey, 0)
-	for _, acc := range signers {
-		pubKeys = append(pubKeys, acc.PublicKey)
-	}
-
-	for _, signer := range signers {
-		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
-		if err != nil {
-			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
-		}
-	}
-
-	if err != nil {
-		return common.UINT256_EMPTY, err
-	}
-	return this.mcSdk.SendTransaction(tx)
-}
-
-func (this *CrossChainManager) NewBtcMultiSignTransaction(txHash []byte, address string, signs [][]byte) (*types.Transaction, error) {
+func (this *CrossChainManager) NewBtcMultiSignTransaction(chainId uint64, redeemKey string, txHash []byte, address string, signs [][]byte) (*types.Transaction, error) {
 
 	state := &nccmc.MultiSignParam{
+		ChainID: chainId,
+		RedeemKey: redeemKey,
 		TxHash:  txHash,
 		Address: address,
 		Signs:   signs,
@@ -148,9 +111,9 @@ func (this *CrossChainManager) NewBtcMultiSignTransaction(txHash []byte, address
 		sink.Bytes())
 }
 
-func (this *CrossChainManager) BtcMultiSign(txHash []byte, address string, signs [][]byte, signer *Account) (common.Uint256, error) {
+func (this *CrossChainManager) BtcMultiSign(chainId uint64, redeemKey string, txHash []byte, address string, signs [][]byte, signer *Account) (common.Uint256, error) {
 
-	tx, err := this.NewBtcMultiSignTransaction(txHash, address, signs)
+	tx, err := this.NewBtcMultiSignTransaction(chainId, redeemKey, txHash, address, signs)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
@@ -161,43 +124,7 @@ func (this *CrossChainManager) BtcMultiSign(txHash []byte, address string, signs
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *CrossChainManager) NewVoteTransaction(fromChainID uint64, address string, txHash string) (*types.Transaction, error) {
-	txHashU, e := common.Uint256FromHexString(txHash)
-	if e != nil {
-		fmt.Printf("txHash illegal error ", e)
-		return &types.Transaction{}, fmt.Errorf("TxHash error: ", e)
-	}
-	txHashBs := txHashU.ToArray()
-	state := &nccmc.VoteParam{
-		FromChainID: fromChainID,
-		Address:     address,
-		TxHash:      txHashBs,
-	}
 
-	sink := new(common.ZeroCopySink)
-	state.Serialization(sink)
-	//if err != nil {
-	//	return nil, fmt.Errorf("Parameter Serilization error: %s", err)
-	//}
-
-	return this.native.NewNativeInvokeTransaction(
-		TX_VERSION,
-		CrossChainManagerContractAddress,
-		ccm.VOTE_NAME,
-		sink.Bytes())
-}
-
-func (this *CrossChainManager) Vote(fromChainID uint64, address string, txHash string, signer *Account) (common.Uint256, error) {
-	tx, err := this.NewVoteTransaction(fromChainID, address, txHash)
-	if err != nil {
-		return common.UINT256_EMPTY, err
-	}
-	err = this.mcSdk.SignToTransaction(tx, signer)
-	if err != nil {
-		return common.UINT256_EMPTY, err
-	}
-	return this.mcSdk.SendTransaction(tx)
-}
 
 func (this *CrossChainManager) NewImportOuterTransferTransaction(sourceChainId uint64, txData []byte, height uint32,
 	proof []byte, relayerAddress []byte, HeaderOrCrossChainMsg []byte) (*types.Transaction, error) {
