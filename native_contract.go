@@ -199,12 +199,11 @@ func (this *CrossChainManager) Vote(fromChainID uint64, address string, txHash s
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *CrossChainManager) NewImportOuterTransferTransaction(sourceChainId uint64, txHash, txData []byte, height uint32,
+func (this *CrossChainManager) NewImportOuterTransferTransaction(sourceChainId uint64, txData []byte, height uint32,
 	proof []byte, relayerAddress []byte, HeaderOrCrossChainMsg []byte) (*types.Transaction, error) {
 
 	state := &nccmc.EntranceParam{
 		SourceChainID:         sourceChainId,
-		TxHash:                txHash,
 		Height:                height,
 		Proof:                 proof,
 		RelayerAddress:        relayerAddress,
@@ -222,10 +221,10 @@ func (this *CrossChainManager) NewImportOuterTransferTransaction(sourceChainId u
 		sink.Bytes())
 }
 
-func (this *CrossChainManager) ImportOuterTransfer(sourceChainId uint64, txHash, txData []byte, height uint32, proof []byte,
+func (this *CrossChainManager) ImportOuterTransfer(sourceChainId uint64, txData []byte, height uint32, proof []byte,
 	relayerAddress []byte, HeaderOrCrossChainMsg []byte, signer *Account) (common.Uint256, error) {
 
-	tx, err := this.NewImportOuterTransferTransaction(sourceChainId, txHash, txData, height, proof, relayerAddress, HeaderOrCrossChainMsg)
+	tx, err := this.NewImportOuterTransferTransaction(sourceChainId, txData, height, proof, relayerAddress, HeaderOrCrossChainMsg)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
