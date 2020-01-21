@@ -123,8 +123,6 @@ func (this *CrossChainManager) BtcMultiSign(chainId uint64, redeemKey string, tx
 	return this.mcSdk.SendTransaction(tx)
 }
 
-
-
 func (this *CrossChainManager) NewImportOuterTransferTransaction(sourceChainId uint64, txData []byte, height uint32,
 	proof []byte, relayerAddress []byte, HeaderOrCrossChainMsg []byte) (*types.Transaction, error) {
 
@@ -744,9 +742,9 @@ type RelayerManager struct {
 	native *NativeContract
 }
 
-func (this *RelayerManager) NewRegisterRelayerTransaction(address []byte) (*types.Transaction, error) {
-	state := &relayer_manager.RelayerParam{
-		Address: address,
+func (this *RelayerManager) NewRegisterRelayerTransaction(addressList [][]byte) (*types.Transaction, error) {
+	state := &relayer_manager.RelayerListParam{
+		AddressList: addressList,
 	}
 
 	sink := new(common.ZeroCopySink)
@@ -758,8 +756,8 @@ func (this *RelayerManager) NewRegisterRelayerTransaction(address []byte) (*type
 		relayer_manager.REGISTER_RELAYER,
 		sink.Bytes())
 }
-func (this *RelayerManager) RegisterRelayer(address []byte, signers []*Account) (common.Uint256, error) {
-	tx, err := this.NewRegisterRelayerTransaction(address)
+func (this *RelayerManager) RegisterRelayer(addressList [][]byte, signers []*Account) (common.Uint256, error) {
+	tx, err := this.NewRegisterRelayerTransaction(addressList)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
@@ -782,9 +780,9 @@ func (this *RelayerManager) RegisterRelayer(address []byte, signers []*Account) 
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *RelayerManager) NewRemoveRelayerTransaction(address []byte) (*types.Transaction, error) {
-	state := &relayer_manager.RelayerParam{
-		Address: address,
+func (this *RelayerManager) NewRemoveRelayerTransaction(addressList [][]byte) (*types.Transaction, error) {
+	state := &relayer_manager.RelayerListParam{
+		AddressList: addressList,
 	}
 
 	sink := new(common.ZeroCopySink)
@@ -796,8 +794,8 @@ func (this *RelayerManager) NewRemoveRelayerTransaction(address []byte) (*types.
 		relayer_manager.REMOVE_RELAYER,
 		sink.Bytes())
 }
-func (this *RelayerManager) RemoveRelayer(address []byte, signers []*Account) (common.Uint256, error) {
-	tx, err := this.NewRemoveRelayerTransaction(address)
+func (this *RelayerManager) RemoveRelayer(addressList [][]byte, signers []*Account) (common.Uint256, error) {
+	tx, err := this.NewRemoveRelayerTransaction(addressList)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
