@@ -462,10 +462,11 @@ type NodeManager struct {
 	native *NativeContract
 }
 
-func (this *NodeManager) NewRegisterCandidateTransaction(peerPubkey string, address []byte) (*types.Transaction, error) {
+func (this *NodeManager) NewRegisterCandidateTransaction(peerPubkey string, address []byte, pos uint64) (*types.Transaction, error) {
 	state := &node_manager.RegisterPeerParam{
 		PeerPubkey: peerPubkey,
 		Address:    address,
+		Pos:        pos,
 	}
 
 	sink := new(common.ZeroCopySink)
@@ -477,8 +478,9 @@ func (this *NodeManager) NewRegisterCandidateTransaction(peerPubkey string, addr
 		node_manager.REGISTER_CANDIDATE,
 		sink.Bytes())
 }
-func (this *NodeManager) RegisterCandidate(peerPubkey string, address []byte, signer *Account) (common.Uint256, error) {
-	tx, err := this.NewRegisterCandidateTransaction(peerPubkey, address)
+
+func (this *NodeManager) RegisterCandidate(peerPubkey string, address []byte, pos uint64, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewRegisterCandidateTransaction(peerPubkey, address, pos)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
@@ -490,7 +492,7 @@ func (this *NodeManager) RegisterCandidate(peerPubkey string, address []byte, si
 }
 
 func (this *NodeManager) NewUnRegisterCandidateTransaction(peerPubkey string, address []byte) (*types.Transaction, error) {
-	state := &node_manager.RegisterPeerParam{
+	state := &node_manager.PeerParam2{
 		PeerPubkey: peerPubkey,
 		Address:    address,
 	}
@@ -517,7 +519,7 @@ func (this *NodeManager) UnRegisterCandidate(peerPubkey string, address []byte, 
 }
 
 func (this *NodeManager) NewQuitNodeTransaction(peerPubkey string, address []byte) (*types.Transaction, error) {
-	state := &node_manager.RegisterPeerParam{
+	state := &node_manager.PeerParam2{
 		PeerPubkey: peerPubkey,
 		Address:    address,
 	}
@@ -689,6 +691,64 @@ func (this *NodeManager) WhiteNode(peerPubkey string, signers []*Account) (commo
 		}
 	}
 
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	return this.mcSdk.SendTransaction(tx)
+}
+
+func (this *NodeManager) NewAddPosTransaction(peerPubkey string, address []byte, pos uint64) (*types.Transaction, error) {
+	state := &node_manager.RegisterPeerParam{
+		PeerPubkey: peerPubkey,
+		Address:    address,
+		Pos:        pos,
+	}
+
+	sink := new(common.ZeroCopySink)
+	state.Serialization(sink)
+
+	return this.native.NewNativeInvokeTransaction(
+		TX_VERSION,
+		NodeManagerContractAddress,
+		node_manager.ADD_POS,
+		sink.Bytes())
+}
+
+func (this *NodeManager) AddPos(peerPubkey string, address []byte, pos uint64, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewAddPosTransaction(peerPubkey, address, pos)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	err = this.mcSdk.SignToTransaction(tx, signer)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	return this.mcSdk.SendTransaction(tx)
+}
+
+func (this *NodeManager) NewReducePosTransaction(peerPubkey string, address []byte, pos uint64) (*types.Transaction, error) {
+	state := &node_manager.RegisterPeerParam{
+		PeerPubkey: peerPubkey,
+		Address:    address,
+		Pos:        pos,
+	}
+
+	sink := new(common.ZeroCopySink)
+	state.Serialization(sink)
+
+	return this.native.NewNativeInvokeTransaction(
+		TX_VERSION,
+		NodeManagerContractAddress,
+		node_manager.REDUCE_POS,
+		sink.Bytes())
+}
+
+func (this *NodeManager) ReducePos(peerPubkey string, address []byte, pos uint64, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewReducePosTransaction(peerPubkey, address, pos)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	err = this.mcSdk.SignToTransaction(tx, signer)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
