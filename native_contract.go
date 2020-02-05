@@ -877,3 +877,35 @@ func (this *RelayerManager) RemoveRelayer(addressList [][]byte, signers []*Accou
 	}
 	return this.mcSdk.SendTransaction(tx)
 }
+
+func (this *NodeManager) NewCommitDposTransaction() (*types.Transaction, error) {
+
+	return this.native.NewNativeInvokeTransaction(
+		TX_VERSION,
+		NodeManagerContractAddress,
+		node_manager.COMMIT_DPOS,
+		[]byte{})
+}
+func (this *NodeManager) CommitDpos(signers []*Account) (common.Uint256, error) {
+	tx, err := this.NewCommitDposTransaction()
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+
+	pubKeys := make([]keypair.PublicKey, 0)
+	for _, acc := range signers {
+		pubKeys = append(pubKeys, acc.PublicKey)
+	}
+
+	for _, signer := range signers {
+		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
+		if err != nil {
+			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
+		}
+	}
+
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	return this.mcSdk.SendTransaction(tx)
+}
