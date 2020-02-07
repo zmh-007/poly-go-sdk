@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/ontio/multi-chain/common"
+	"math/big"
 )
 
 var (
@@ -54,18 +55,15 @@ type TransferFromInfo struct {
 
 type PreExecResult struct {
 	State  byte
-	Gas    uint64
 	Result *ResultItem
 }
 
 func (this *PreExecResult) UnmarshalJSON(data []byte) (err error) {
 	var state byte
-	var gas uint64
 	var resultItem *ResultItem
 	defer func() {
 		if err == nil {
 			this.State = state
-			this.Gas = gas
 			this.Result = resultItem
 		}
 	}()
@@ -82,12 +80,6 @@ func (this *PreExecResult) UnmarshalJSON(data []byte) (err error) {
 	}
 	state = byte(stateField)
 
-	gasField, ok := objects["Gas"].(float64)
-	if !ok {
-		err = fmt.Errorf("Parse Gas field failed, type error")
-		return
-	}
-	gas = uint64(gasField)
 	resultField, ok := objects["Result"]
 	if !ok {
 		return nil
@@ -157,12 +149,19 @@ func (this ResultItem) ToString() (string, error) {
 	return string(data), nil
 }
 
+func (this ResultItem) ToBigInteger() (*big.Int, error) {
+	data, err := this.ToByteArray()
+	if err != nil {
+		return big.NewInt(0), err
+	}
+	return big.NewInt(0).SetBytes(data), nil
+}
+
 //SmartContactEvent object for event of transaction
 type SmartContactEvent struct {
-	TxHash      string
-	State       byte
-	GasConsumed uint64
-	Notify      []*NotifyEventInfo
+	TxHash string
+	State  byte
+	Notify []*NotifyEventInfo
 }
 
 type NotifyEventInfo struct {

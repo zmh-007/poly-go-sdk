@@ -5,9 +5,11 @@ import (
 	oc "github.com/ontio/multi-chain/common"
 	"testing"
 
+	"encoding/hex"
 	"encoding/json"
 	"github.com/ontio/multi-chain-go-sdk"
 	"github.com/ontio/multi-chain-go-sdk/common"
+	common2 "github.com/ontio/multi-chain/native/service/cross_chain_manager/common"
 	"github.com/ontio/ontology-crypto/signature"
 )
 
@@ -72,4 +74,33 @@ func TestGetCrossStatesProof(t *testing.T) {
 	}
 	fmt.Printf("GetCrossStatesProof is %+v\n ", crossStatesProof)
 
+}
+
+func Test_DeserializeToMerkleVale(t *testing.T) {
+	toMVStr := "207bb26090f1dc1907b015893894e050d5aca51c4bc5c65a210d243768b2e02eab03000000000000002052a44d75b53c706c01b3242b5870268f4744046844a28b3b2f7bec685b2cee7e086e0400000000000014179da41c9eaac82a597c4d988bc614e551395f9e0200000000000000143c2ecab519d77d20520b16227492b8621e45c1a006756e6c6f636b360014fb8ec05421a71a5e6a735001c309fb894df248a40a00000000000000000000000000000000000000000000000000000000000000"
+	toMVBs, _ := hex.DecodeString(toMVStr)
+	var toMV common2.ToMerkleValue
+	source := oc.NewZeroCopySource(toMVBs)
+	err := toMV.Deserialization(source)
+	if err != nil {
+		t.Errorf("deserialzie error :%s", err)
+	}
+	fmt.Printf("args bytes is %s\n", hex.EncodeToString(toMV.MakeTxParam.Args))
+	s1 := oc.NewZeroCopySource(toMV.MakeTxParam.Args)
+
+	argsAssetAddress, eof := s1.NextVarBytes()
+	if eof {
+		t.Errorf("args.NextVarBytes() error ")
+	}
+	argsToAddress, eof := s1.NextVarBytes()
+	if eof {
+		t.Errorf("args.NextVarBytes() error ")
+	}
+	argsValue, eof := s1.NextUint64()
+	if eof {
+		t.Errorf("args.NextUint64() error ")
+	}
+	fmt.Println("args.AssetAddress is ", hex.EncodeToString(argsAssetAddress))
+	fmt.Println("args.ToAddress is ", hex.EncodeToString(argsToAddress))
+	fmt.Println("args.Value is ", argsValue)
 }
