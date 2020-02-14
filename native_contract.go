@@ -465,6 +465,40 @@ func (this *SideChainManager) RemoveSideChain(chainId uint64, signers []*Account
 	return this.mcSdk.SendTransaction(tx)
 }
 
+func (this *SideChainManager) NewRegisterRedeemTransaction(redeemChainID, contractChainID uint64,
+	redeem, contractAddress []byte, address string, signs [][]byte) (*types.Transaction, error) {
+	state := &side_chain_manager.RegisterRedeemParam{
+		RedeemChainID:   redeemChainID,
+		ContractChainID: contractChainID,
+		Redeem:          redeem,
+		ContractAddress: contractAddress,
+		Address:         address,
+		Signs:           signs,
+	}
+
+	sink := new(common.ZeroCopySink)
+	state.Serialization(sink)
+
+	return this.native.NewNativeInvokeTransaction(
+		TX_VERSION,
+		SideChainManagerContractAddress,
+		side_chain_manager.REGISTER_REDEEM,
+		sink.Bytes())
+}
+func (this *SideChainManager) RegisterRedeem(redeemChainID, contractChainID uint64,
+	redeem, contractAddress []byte, address string, signs [][]byte, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewRegisterRedeemTransaction(redeemChainID, contractChainID, redeem, contractAddress,
+		address, signs)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	err = this.mcSdk.SignToTransaction(tx, signer)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	return this.mcSdk.SendTransaction(tx)
+}
+
 type NodeManager struct {
 	mcSdk  *MultiChainSdk
 	native *NativeContract
