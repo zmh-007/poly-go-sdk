@@ -1,17 +1,16 @@
 package test
 
 import (
-	"bytes"
 	"encoding/hex"
 	"fmt"
 	. "github.com/ontio/multi-chain-go-sdk"
 	"github.com/ontio/multi-chain/common"
-	"github.com/ontio/multi-chain/common/serialization"
+	"github.com/ontio/multi-chain/common/constants"
 	common2 "github.com/ontio/multi-chain/native/service/cross_chain_manager/common"
-	olp "github.com/ontio/multi-chain/native/service/ont_lock_proxy"
 	"github.com/ontio/multi-chain/native/service/utils"
 	"github.com/ontio/ontology-crypto/keypair"
 	ontutils "github.com/ontio/ontology/smartcontract/service/native/utils"
+	"math/big"
 	"testing"
 	"time"
 )
@@ -67,59 +66,6 @@ func Init() {
 
 }
 
-func Test_ONT_Transfer(t *testing.T) {
-
-	Init()
-	testMcSdk := NewMultiChainSdk()
-	testMcSdk.NewRpcClient().SetAddress(testNetUrl)
-
-	testWallet, _ = testMcSdk.OpenWallet(walletPath)
-	acct1, _ := testWallet.GetAccountByIndex(1, testPasswd)
-	res, err := testMcSdk.Native.Ont.BalanceOf(acct1.Address)
-	if err != nil {
-		t.Errorf("BalanceOf(%s) error:%s\n", hex.EncodeToString(acct1.Address[:]), err)
-	}
-	fmt.Printf("balance of wallet.Account1 %s is %d\n", hex.EncodeToString(acct1.Address[:]), res)
-	acct2, _ := testWallet.GetAccountByIndex(2, testPasswd)
-	res, err = testMcSdk.Native.Ont.BalanceOf(acct2.Address)
-	if err != nil {
-		t.Errorf("readuint64 error:%s\n", err)
-	}
-	fmt.Printf("balance of wallet.Account1 %s is %d\n", hex.EncodeToString(acct2.Address[:]), res)
-
-	txHash, err := testMcSdk.Native.Ont.Transfer(nil, acct1, acct2.Address, 1)
-	if err != nil {
-		t.Errorf("Lock error:%s", err)
-		return
-	}
-	fmt.Printf("txHash is %s\n", txHash.ToHexString())
-	testMcSdk.WaitForGenerateBlock(40*time.Second, 2)
-
-	evts, err := testMcSdk.GetSmartContractEvent(txHash.ToHexString())
-	if err != nil {
-		t.Errorf("GetSmartContractEvent error:%s", err)
-		return
-	}
-	fmt.Printf("TxHash:%s\n", txHash.ToHexString())
-	fmt.Printf("State:%d\n", evts.State)
-	for _, notify := range evts.Notify {
-		fmt.Printf("ContractAddress:%s\n", notify.ContractAddress)
-		fmt.Printf("States:%+v\n", notify.States)
-	}
-
-	res, err = testMcSdk.Native.Ont.BalanceOf(acct1.Address)
-	if err != nil {
-		t.Errorf("readuint64 error:%s\n", err)
-	}
-	fmt.Printf("balance of wallet.Account1 %s is %d\n", hex.EncodeToString(acct1.Address[:]), res)
-	res, err = testMcSdk.Native.Ont.BalanceOf(acct2.Address)
-	if err != nil {
-		t.Errorf("readuint64 error:%s\n", err)
-	}
-	fmt.Printf("balance of wallet.Account1 %s is %d\n", hex.EncodeToString(acct2.Address[:]), res)
-
-}
-
 func Test_Ont_BalanceOf_Base58_Format(t *testing.T) {
 	Init()
 	addr, _ := common.AddressFromBase58("AJq9fNeGfk8fsherPuj3ZLXSq1BJoSerF9")
@@ -140,7 +86,7 @@ func Test_BalanceOf_OntLockContract(t *testing.T) {
 	testMcSdk := NewMultiChainSdk()
 	testMcSdk.NewRpcClient().SetAddress(testNetUrl)
 	fmt.Printf("")
-	res, err := testMcSdk.Native.Ont.BalanceOf(utils.OntLockProxyContractAddress)
+	res, err := testMcSdk.Native.Ont.BalanceOf(utils.LockProxyContractAddress)
 	if err != nil {
 		t.Errorf("readuint64 error:%s\n", err)
 	}
@@ -163,16 +109,38 @@ func Test_BalanceOf_Wallet(t *testing.T) {
 			return
 		}
 		fmt.Printf("walelt index = %d, ont balance of %s = %d\n", i, hex.EncodeToString(acctI.Address[:]), balanceI)
+		balanceI, err = testMcSdk.Native.Ong.BalanceOf(acctI.Address)
+		if err != nil {
+			t.Errorf("get balance error: wallet index = %d, balance of %s, err=%s\n", i, hex.EncodeToString(acctI.Address[:]), err)
+			return
+		}
+		fmt.Printf("walelt index = %d, ong balance of %s = %d\n", i, hex.EncodeToString(acctI.Address[:]), balanceI)
 	}
+	Test_GetBalanceOf_LockProxyContract(t)
 }
-func TestOnt_Lock(t *testing.T) {
+func Test_GetBalanceOf_LockProxyContract(t *testing.T) {
+	Init()
+	res, err := testMcSdk.Native.Ont.BalanceOf(utils.LockProxyContractAddress)
+	if err != nil {
+		t.Errorf("get balance of lockContract err %s\n", err)
+	}
+	fmt.Printf("ont balance of LockProxyContract = %s = %d\n", hex.EncodeToString(utils.LockProxyContractAddress[:]), res)
+	res, err = testMcSdk.Native.Ong.BalanceOf(utils.LockProxyContractAddress)
+	if err != nil {
+		t.Errorf("get balance of lockContract err %s\n", err)
+	}
+	fmt.Printf("ong balance of LockProxyContract = %s = %d\n", hex.EncodeToString(utils.LockProxyContractAddress[:]), res)
+}
+
+func Test_Lock(t *testing.T) {
 	Init()
 	testMcSdk := NewMultiChainSdk()
 	testMcSdk.NewRpcClient().SetAddress(testNetUrl)
 	testWallet, _ = testMcSdk.OpenWallet(walletPath)
 	fmt.Printf("testWalletAccount is %s\n", hex.EncodeToString(testDefAcc.Address[:]))
-	toAddressBytes, _ := hex.DecodeString("6d236b330a61a15b04aa6590e634ec7a3c411850")
-	txHash, err := testMcSdk.Native.OntLock.Lock(nil, OntContractAddress, testDefAcc, 3, toAddressBytes, 2)
+	toAddressBytes, _ := hex.DecodeString("6f421994b064e343e82522048962bb5328142ce1")
+	txHash, err := testMcSdk.Native.LockProxy.Lock(OntContractAddress, testDefAcc, 3, toAddressBytes, 100)
+	//txHash, err := testMcSdk.Native.LockProxy.Lock(OngContractAddress, testDefAcc, 3, toAddressBytes, 100)
 	if err != nil {
 		t.Errorf("Lock error:%s", err)
 		return
@@ -193,10 +161,8 @@ func TestOnt_Lock(t *testing.T) {
 
 func TestOnt_BindProxy(t *testing.T) {
 	Init()
-	testMcSdk := NewMultiChainSdk()
-	testMcSdk.NewRpcClient().SetAddress(testNetUrl)
 	pks, sgners := openWalletForBind()
-	txHash, err := testMcSdk.Native.OntLock.BindProxyHash(3, ontutils.OntLockContractAddress[:], pks, sgners)
+	txHash, err := testMcSdk.Native.LockProxy.BindProxyHash(3, ontutils.LockProxyContractAddress[:], pks, sgners)
 	if err != nil {
 		t.Errorf("BindProxyHash error:%s", err)
 		return
@@ -215,50 +181,70 @@ func TestOnt_BindProxy(t *testing.T) {
 	}
 }
 
-func Test_GetBindProxy(t *testing.T) {
+func Test_GetProxyHash(t *testing.T) {
 	Init()
-	toChainId := 3
-	bindProxy, err := getBindProxyHashFromStorage(uint64(toChainId))
-	if err != nil && bindProxy != "" {
+	var toChainId uint64 = 3
+	bindProxyHash, err := testMcSdk.Native.LockProxy.GetProxyHash(toChainId)
+	if err != nil {
 		t.Errorf("Cannot get bind asset hash, err:%s", err)
 	}
-	fmt.Printf("GetBindProxyHash(%d) = %s\n", toChainId, bindProxy)
+	fmt.Printf("GetBindProxyHash(%d) = %s\n", toChainId, hex.EncodeToString(bindProxyHash))
 }
 
 func TestOnt_BindAsset(t *testing.T) {
 	Init()
-	testMcSdk := NewMultiChainSdk()
-	testMcSdk.NewRpcClient().SetAddress(testNetUrl)
 	pks, sgners := openWalletForBind()
-	fmt.Printf("done")
-	txHash, err := testMcSdk.Native.OntLock.BindAssetHash(OntContractAddress, 3, ontutils.OntContractAddress[:], pks, sgners)
+	txHash, err := testMcSdk.Native.LockProxy.BindAssetHash(OntContractAddress, 3, ontutils.OntContractAddress[:], big.NewInt(0).SetUint64(constants.ONT_TOTAL_SUPPLY), true, pks, sgners)
 	if err != nil {
 		t.Errorf("BindAssetHash error:%s", err)
 		return
 	}
 	testMcSdk.WaitForGenerateBlock(30*time.Second, 2)
-	evts, err := testMcSdk.GetSmartContractEvent(txHash.ToHexString())
+	printSmartContractEvent(txHash.ToHexString())
+
+	txHash, err = testMcSdk.Native.LockProxy.BindAssetHash(OngContractAddress, 3, ontutils.OngContractAddress[:], big.NewInt(0).SetUint64(constants.ONG_TOTAL_SUPPLY), true, pks, sgners)
 	if err != nil {
-		t.Errorf("GetSmartContractEvent error:%s", err)
+		t.Errorf("BindAssetHash error:%s", err)
 		return
 	}
-	fmt.Printf("TxHash:%s\n", txHash.ToHexString())
-	fmt.Printf("State:%d\n", evts.State)
-	for _, notify := range evts.Notify {
-		fmt.Printf("ContractAddress:%s\n", notify.ContractAddress)
-		fmt.Printf("States:%+v\n", notify.States)
-	}
+	testMcSdk.WaitForGenerateBlock(30*time.Second, 2)
+	printSmartContractEvent(txHash.ToHexString())
 }
 
-func Test_GetBindAssetHash(t *testing.T) {
+func Test_GetAssetHash(t *testing.T) {
 	Init()
-	sourceAssetHash := OntContractAddress
-	toChainId := 3
-	bindProxy, err := getBindAssetHashFromStorage(sourceAssetHash, uint64(toChainId))
-	if err != nil && bindProxy != "" {
+	//sourceAssetHash := OntContractAddress
+	sourceAssetHash := OngContractAddress
+	var toChainId uint64 = 3
+	bindAssetHash, err := testMcSdk.Native.LockProxy.GetAssetHash(sourceAssetHash, toChainId)
+	if err != nil {
 		t.Errorf("Cannot get bind asset hash, err:%s", err)
 	}
-	fmt.Printf("GetBindAssetHash(%s, %d) = %s\n", hex.EncodeToString(sourceAssetHash[:]), toChainId, bindProxy)
+	fmt.Printf("GetBindAssetHash(%s, %d) = %s\n", hex.EncodeToString(sourceAssetHash[:]), toChainId, hex.EncodeToString(bindAssetHash))
+}
+
+func Test_GetCrossedAmount(t *testing.T) {
+	Init()
+	//sourceAssetHash := OntContractAddress
+	sourceAssetHash := OngContractAddress
+	var toChainId uint64 = 3
+	crossedAmount, err := testMcSdk.Native.LockProxy.GetCrossedAmount(sourceAssetHash, toChainId)
+	if err != nil {
+		t.Errorf("Cannot get bind asset hash, err:%s", err)
+	}
+	fmt.Printf("GetCrossedAmount(%s, %d) = %d\n", hex.EncodeToString(sourceAssetHash[:]), toChainId, crossedAmount)
+}
+
+func Test_GetCrossedLimit(t *testing.T) {
+	Init()
+	//sourceAssetHash := OntContractAddress
+	sourceAssetHash := OngContractAddress
+	var toChainId uint64 = 3
+	crossedLimit, err := testMcSdk.Native.LockProxy.GetCrossedLimit(sourceAssetHash, toChainId)
+	if err != nil {
+		t.Errorf("Cannot get bind asset hash, err:%s", err)
+	}
+	fmt.Printf("GetCrossedLimit(%s, %d) = %d\n", hex.EncodeToString(sourceAssetHash[:]), toChainId, crossedLimit)
 }
 
 func Test_GetSmartContractEvent(t *testing.T) {
@@ -332,8 +318,6 @@ func openWalletForBind() (pubKeys []keypair.PublicKey, singers []*Account) {
 		}
 		pks = append(pks, testDefAcc.PublicKey)
 		accounts = append(accounts, testDefAcc)
-		//fmt.Printf("pk index:%d,  is %v\n", i, pks[i])
-		//fmt.Printf("accounts index:%d, is %v\n", i, accounts[i].Address.ToBase58())
 	}
 
 	return pks, accounts
@@ -341,12 +325,6 @@ func openWalletForBind() (pubKeys []keypair.PublicKey, singers []*Account) {
 }
 func paserAuditpath(path []byte) ([]byte, []byte, [][32]byte, error) {
 	source := common.NewZeroCopySource(path)
-	/*
-		l, eof := source.NextUint64()
-		if eof {
-			return nil, nil, nil, nil
-		}
-	*/
 	value, eof := source.NextVarBytes()
 	if eof {
 		return nil, nil, nil, nil
@@ -371,35 +349,4 @@ func paserAuditpath(path []byte) ([]byte, []byte, [][32]byte, error) {
 	}
 
 	return value, pos, hashs, nil
-}
-
-func getBindProxyHashFromStorage(toChainId uint64) (string, error) {
-	bs := make([]byte, 0)
-	bs = append(bs, []byte(olp.BIND_PROXY_NAME)...)
-	sink := common.NewZeroCopySink(nil)
-	sink.WriteUint64(toChainId)
-	chainIdBytes := sink.Bytes()
-	bs = append(bs, chainIdBytes...)
-	proxyStorage, _ := testMcSdk.GetStorage(OntLockContractAddress.ToHexString(), bs)
-	ts, err := serialization.ReadVarBytes(bytes.NewBuffer(proxyStorage))
-	if err != nil {
-		return "", fmt.Errorf("readVarBytes error:%s", err)
-	}
-	return hex.EncodeToString(ts), nil
-}
-
-func getBindAssetHashFromStorage(assetHash common.Address, toChainId uint64) (string, error) {
-	bs := make([]byte, 0)
-	bs = append(bs, []byte(olp.BIND_ASSET_NAME)...)
-	bs = append(bs, assetHash[:]...)
-	sink := common.NewZeroCopySink(nil)
-	sink.WriteUint64(toChainId)
-	chainIdBytes := sink.Bytes()
-	bs = append(bs, chainIdBytes...)
-	assetStorage, _ := testMcSdk.GetStorage(OntLockContractAddress.ToHexString(), bs)
-	ts, err := serialization.ReadVarBytes(bytes.NewBuffer(assetStorage))
-	if err != nil {
-		return "", fmt.Errorf("readVarBytes error:%s", err)
-	}
-	return hex.EncodeToString(ts), nil
 }

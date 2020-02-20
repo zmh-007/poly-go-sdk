@@ -12,21 +12,23 @@ import (
 	"github.com/ontio/multi-chain/native/service/governance/side_chain_manager"
 	hs "github.com/ontio/multi-chain/native/service/header_sync"
 	hsc "github.com/ontio/multi-chain/native/service/header_sync/common"
+	"github.com/ontio/multi-chain/native/service/lock_proxy"
 	"github.com/ontio/multi-chain/native/service/ont"
-	ontlock "github.com/ontio/multi-chain/native/service/ont_lock_proxy"
 	mcnsu "github.com/ontio/multi-chain/native/service/utils"
 	"github.com/ontio/multi-chain/native/states"
 	"github.com/ontio/ontology-crypto/keypair"
+	"math/big"
 )
 
 var (
+	OntContractAddress               = mcnsu.OntContractAddress
+	OngContractAddress               = mcnsu.OngContractAddress
 	HeaderSyncContractAddress        = mcnsu.HeaderSyncContractAddress
 	CrossChainManagerContractAddress = mcnsu.CrossChainManagerContractAddress
 	SideChainManagerContractAddress  = mcnsu.SideChainManagerContractAddress
 	NodeManagerContractAddress       = mcnsu.NodeManagerContractAddress
 	RelayerManagerContractAddress    = mcnsu.RelayerManagerContractAddress
-	OntContractAddress               = mcnsu.OntContractAddress
-	OntLockContractAddress           = mcnsu.OntLockProxyContractAddress
+	LockProxyContractAddress         = mcnsu.LockProxyContractAddress
 )
 
 var (
@@ -37,15 +39,16 @@ var OPCODE_IN_PAYLOAD = map[byte]bool{0xc6: true, 0x6b: true, 0x6a: true, 0xc8: 
 	0x7c: true, 0xc1: true}
 
 type NativeContract struct {
-	mcSdk   *MultiChainSdk
-	Cc      *CrossChain
-	Hs      *HeaderSync
-	Ccm     *CrossChainManager
-	Scm     *SideChainManager
-	Nm      *NodeManager
-	Rm      *RelayerManager
-	Ont     *Ont
-	OntLock *OntLock
+	mcSdk     *MultiChainSdk
+	Cc        *CrossChain
+	Hs        *HeaderSync
+	Ccm       *CrossChainManager
+	Scm       *SideChainManager
+	Nm        *NodeManager
+	Rm        *RelayerManager
+	Ont       *Ont
+	Ong       *Ong
+	LockProxy *LockProxy
 }
 
 func newNativeContract(mcSdk *MultiChainSdk) *NativeContract {
@@ -57,7 +60,8 @@ func newNativeContract(mcSdk *MultiChainSdk) *NativeContract {
 	native.Nm = &NodeManager{native: native, mcSdk: mcSdk}
 	native.Rm = &RelayerManager{native: native, mcSdk: mcSdk}
 	native.Ont = &Ont{native: native, mcSdk: mcSdk}
-	native.OntLock = &OntLock{native: native, mcSdk: mcSdk}
+	native.Ong = &Ong{native: native, mcSdk: mcSdk}
+	native.LockProxy = &LockProxy{native: native, mcSdk: mcSdk}
 	return native
 }
 
@@ -222,9 +226,6 @@ func (this *HeaderSync) NewSyncBlockHeaderTransaction(chainId uint64, address co
 
 	sink := new(common.ZeroCopySink)
 	state.Serialization(sink)
-	//if err != nil {
-	//	return nil, fmt.Errorf("Parameter Serilization error: %s", err)
-	//}
 
 	return this.native.NewNativeInvokeTransaction(
 		TX_VERSION,
@@ -966,7 +967,7 @@ func (this *Ont) NewTransferTransaction(from, to common.Address, amount uint64) 
 	return this.NewMultiTransferTransaction([]ont.State{state})
 }
 
-func (this *Ont) Transfer(payer *Account, from *Account, to common.Address, amount uint64) (common.Uint256, error) {
+func (this *Ont) Transfer(from *Account, to common.Address, amount uint64) (common.Uint256, error) {
 	tx, err := this.NewTransferTransaction(from.Address, to, amount)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -994,7 +995,7 @@ func (this *Ont) NewMultiTransferTransaction(states []ont.State) (*types.Transac
 		sink.Bytes())
 }
 
-func (this *Ont) MultiTransfer(payer *Account, states []ont.State, signer *Account) (common.Uint256, error) {
+func (this *Ont) MultiTransfer(states []ont.State, signer *Account) (common.Uint256, error) {
 	tx, err := this.NewMultiTransferTransaction(states)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -1023,7 +1024,7 @@ func (this *Ont) NewTransferFromTransaction(sender, from, to common.Address, amo
 	)
 }
 
-func (this *Ont) TransferFrom(payer *Account, sender *Account, from, to common.Address, amount uint64) (common.Uint256, error) {
+func (this *Ont) TransferFrom(sender *Account, from, to common.Address, amount uint64) (common.Uint256, error) {
 	tx, err := this.NewTransferFromTransaction(sender.Address, from, to, amount)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -1051,7 +1052,7 @@ func (this *Ont) NewApproveTransaction(from, to common.Address, amount uint64) (
 	)
 }
 
-func (this *Ont) Approve(payer *Account, from *Account, to common.Address, amount uint64) (common.Uint256, error) {
+func (this *Ont) Approve(from *Account, to common.Address, amount uint64) (common.Uint256, error) {
 	tx, err := this.NewApproveTransaction(from.Address, to, amount)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -1064,7 +1065,7 @@ func (this *Ont) Approve(payer *Account, from *Account, to common.Address, amoun
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *OntLock) Allowance(from, to common.Address) (uint64, error) {
+func (this *Ont) Allowance(from, to common.Address) (uint64, error) {
 	sink := new(common.ZeroCopySink)
 	sink.WriteAddress(from)
 	sink.WriteAddress(to)
@@ -1163,19 +1164,230 @@ func (this *Ont) TotalSupply() (uint64, error) {
 	return supply.Uint64(), nil
 }
 
-type OntLock struct {
+type Ong struct {
 	mcSdk  *MultiChainSdk
 	native *NativeContract
 }
 
-func (this *OntLock) BindProxyHash(targetChainId uint64, targetHash []byte, pubKeys []keypair.PublicKey, singers []*Account) (common.Uint256, error) {
+func (this *Ong) NewTransferTransaction(from, to common.Address, amount uint64) (*types.Transaction, error) {
+	state := ont.State{
+		From:  from,
+		To:    to,
+		Value: amount,
+	}
+	return this.NewMultiTransferTransaction([]ont.State{state})
+}
+
+func (this *Ong) Transfer(from *Account, to common.Address, amount uint64) (common.Uint256, error) {
+	tx, err := this.NewTransferTransaction(from.Address, to, amount)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	err = this.mcSdk.SignToTransaction(tx, from)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	return this.mcSdk.SendTransaction(tx)
+}
+
+func (this *Ong) NewMultiTransferTransaction(states []ont.State) (*types.Transaction, error) {
+	var transfers ont.Transfers
+	transfers = ont.Transfers{
+		States: states,
+	}
+
 	sink := new(common.ZeroCopySink)
-	bindParam := &ontlock.BindProxyParam{TargetChainId: targetChainId, TargetHash: targetHash}
+	transfers.Serialization(sink)
+
+	return this.native.NewNativeInvokeTransaction(
+		TX_VERSION,
+		OngContractAddress,
+		ont.TRANSFER_NAME,
+		sink.Bytes())
+}
+
+func (this *Ong) MultiTransfer(states []ont.State, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewMultiTransferTransaction(states)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	err = this.mcSdk.SignToTransaction(tx, signer)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	return this.mcSdk.SendTransaction(tx)
+}
+
+func (this *Ong) NewTransferFromTransaction(sender, from, to common.Address, amount uint64) (*types.Transaction, error) {
+	state := &ont.TransferFrom{
+		Sender: sender,
+		From:   from,
+		To:     to,
+		Value:  amount,
+	}
+	sink := new(common.ZeroCopySink)
+	state.Serialization(sink)
+	return this.native.NewNativeInvokeTransaction(
+		TX_VERSION,
+		OngContractAddress,
+		ont.TRANSFERFROM_NAME,
+		sink.Bytes(),
+	)
+}
+
+func (this *Ong) TransferFrom(sender *Account, from, to common.Address, amount uint64) (common.Uint256, error) {
+	tx, err := this.NewTransferFromTransaction(sender.Address, from, to, amount)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	err = this.mcSdk.SignToTransaction(tx, sender)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	return this.mcSdk.SendTransaction(tx)
+}
+
+func (this *Ong) NewApproveTransaction(from, to common.Address, amount uint64) (*types.Transaction, error) {
+	state := ont.State{
+		From:  from,
+		To:    to,
+		Value: amount,
+	}
+	sink := new(common.ZeroCopySink)
+	state.Serialization(sink)
+	return this.native.NewNativeInvokeTransaction(
+		TX_VERSION,
+		OngContractAddress,
+		ont.APPROVE_NAME,
+		sink.Bytes(),
+	)
+}
+
+func (this *Ong) Approve(from *Account, to common.Address, amount uint64) (common.Uint256, error) {
+	tx, err := this.NewApproveTransaction(from.Address, to, amount)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+
+	err = this.mcSdk.SignToTransaction(tx, from)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	return this.mcSdk.SendTransaction(tx)
+}
+
+func (this *Ong) Allowance(from, to common.Address) (uint64, error) {
+	sink := new(common.ZeroCopySink)
+	sink.WriteAddress(from)
+	sink.WriteAddress(to)
+	preResult, err := this.native.PreExecInvokeNativeContract(
+		TX_VERSION,
+		OngContractAddress,
+		ont.ALLOWANCE_NAME,
+		sink.Bytes(),
+	)
+	if err != nil {
+		return 0, err
+	}
+	allowance, err := preResult.Result.ToBigInteger()
+	if err != nil {
+		return 0, err
+	}
+	return allowance.Uint64(), nil
+}
+
+func (this *Ong) Symbol() (string, error) {
+	preResult, err := this.native.PreExecInvokeNativeContract(
+		TX_VERSION,
+		OngContractAddress,
+		ont.SYMBOL_NAME,
+		nil,
+	)
+	if err != nil {
+		return "", err
+	}
+	return preResult.Result.ToString()
+}
+
+func (this *Ong) BalanceOf(address common.Address) (uint64, error) {
+	sink := new(common.ZeroCopySink)
+	sink.WriteAddress(address)
+	preResult, err := this.native.PreExecInvokeNativeContract(
+		TX_VERSION,
+		OngContractAddress,
+		ont.BALANCEOF_NAME,
+		sink.Bytes(),
+	)
+	if err != nil {
+		return 0, err
+	}
+	balance, err := preResult.Result.ToBigInteger()
+	if err != nil {
+		return 0, err
+	}
+	return balance.Uint64(), nil
+}
+
+func (this *Ong) Name() (string, error) {
+	preResult, err := this.native.PreExecInvokeNativeContract(
+		TX_VERSION,
+		OngContractAddress,
+		ont.NAME_NAME,
+		nil,
+	)
+	if err != nil {
+		return "", err
+	}
+	return preResult.Result.ToString()
+}
+
+func (this *Ong) Decimals() (int64, error) {
+	preResult, err := this.native.PreExecInvokeNativeContract(
+		TX_VERSION,
+		OngContractAddress,
+		ont.DECIMALS_NAME,
+		nil,
+	)
+	if err != nil {
+		return 0, err
+	}
+	decimals, err := preResult.Result.ToBigInteger()
+	if err != nil {
+		return 0, err
+	}
+	return decimals.Int64(), nil
+}
+
+func (this *Ong) TotalSupply() (uint64, error) {
+	preResult, err := this.native.PreExecInvokeNativeContract(
+		TX_VERSION,
+		OngContractAddress,
+		ont.TOTAL_SUPPLY_NAME,
+		[]byte{},
+	)
+	if err != nil {
+		return 0, err
+	}
+	supply, err := preResult.Result.ToBigInteger()
+	if err != nil {
+		return 0, err
+	}
+	return supply.Uint64(), nil
+}
+
+type LockProxy struct {
+	mcSdk  *MultiChainSdk
+	native *NativeContract
+}
+
+func (this *LockProxy) BindProxyHash(targetChainId uint64, targetHash []byte, pubKeys []keypair.PublicKey, singers []*Account) (common.Uint256, error) {
+	sink := common.NewZeroCopySink(nil)
+	bindParam := &lock_proxy.BindProxyParam{TargetChainId: targetChainId, TargetHash: targetHash}
 	bindParam.Serialization(sink)
 	tx, err := this.native.NewNativeInvokeTransaction(
 		TX_VERSION,
-		OntLockContractAddress,
-		ontlock.BIND_PROXY_NAME,
+		LockProxyContractAddress,
+		lock_proxy.BIND_PROXY_NAME,
 		sink.Bytes(),
 	)
 	if err != nil {
@@ -1191,14 +1403,14 @@ func (this *OntLock) BindProxyHash(targetChainId uint64, targetHash []byte, pubK
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *OntLock) BindAssetHash(SourceAssetHash common.Address, targetChainId uint64, targetAssetHash []byte, pubKeys []keypair.PublicKey, singers []*Account) (common.Uint256, error) {
+func (this *LockProxy) BindAssetHash(SourceAssetHash common.Address, targetChainId uint64, targetAssetHash []byte, assetLimit *big.Int, isTargetChainAsset bool, pubKeys []keypair.PublicKey, singers []*Account) (common.Uint256, error) {
 	sink := new(common.ZeroCopySink)
-	bindParam := &ontlock.BindAssetParam{SourceAssetHash: SourceAssetHash, TargetChainId: targetChainId, TargetAssetHash: targetAssetHash}
+	bindParam := &lock_proxy.BindAssetParam{SourceAssetHash: SourceAssetHash, TargetChainId: targetChainId, TargetAssetHash: targetAssetHash, Limit: assetLimit, IsTargetChainAsset: isTargetChainAsset}
 	bindParam.Serialization(sink)
 	tx, err := this.native.NewNativeInvokeTransaction(
 		TX_VERSION,
-		OntLockContractAddress,
-		ontlock.BIND_ASSET_NAME,
+		LockProxyContractAddress,
+		lock_proxy.BIND_ASSET_NAME,
 		sink.Bytes(),
 	)
 	if err != nil {
@@ -1214,8 +1426,8 @@ func (this *OntLock) BindAssetHash(SourceAssetHash common.Address, targetChainId
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *OntLock) Lock(payer *Account, sourceAssetHash common.Address, from *Account, toChainID uint64, toAddress []byte, amount uint64) (common.Uint256, error) {
-	state := &ontlock.LockParam{
+func (this *LockProxy) Lock(sourceAssetHash common.Address, from *Account, toChainID uint64, toAddress []byte, amount uint64) (common.Uint256, error) {
+	state := &lock_proxy.LockParam{
 		SourceAssetHash: sourceAssetHash,
 		FromAddress:     from.Address,
 		ToChainID:       toChainID,
@@ -1226,8 +1438,8 @@ func (this *OntLock) Lock(payer *Account, sourceAssetHash common.Address, from *
 	state.Serialization(sink)
 	tx, err := this.native.NewNativeInvokeTransaction(
 		TX_VERSION,
-		OntLockContractAddress,
-		ontlock.LOCK_NAME,
+		LockProxyContractAddress,
+		lock_proxy.LOCK_NAME,
 		sink.Bytes(),
 	)
 	if err != nil {
@@ -1239,4 +1451,82 @@ func (this *OntLock) Lock(payer *Account, sourceAssetHash common.Address, from *
 		return common.UINT256_EMPTY, err
 	}
 	return this.mcSdk.SendTransaction(tx)
+}
+
+func (this *LockProxy) GetProxyHash(toChainId uint64) ([]byte, error) {
+	sink := common.NewZeroCopySink(nil)
+	sink.WriteVarUint(toChainId)
+	preResult, err := this.native.PreExecInvokeNativeContract(
+		TX_VERSION,
+		LockProxyContractAddress,
+		lock_proxy.GET_PROXY_HASH_NAME,
+		sink.Bytes(),
+	)
+	if err != nil {
+		return nil, err
+	}
+	proxyHash, err := preResult.Result.ToByteArray()
+	if err != nil {
+		return nil, err
+	}
+	return proxyHash, nil
+}
+
+type AssetHashStruct struct {
+	SourceAssetAddress common.Address
+	ToChainId          uint64
+}
+
+func (this *LockProxy) GetAssetHash(sourceAssetAddress common.Address, toChainId uint64) ([]byte, error) {
+	sink := common.NewZeroCopySink(nil)
+	sink.WriteAddress(sourceAssetAddress)
+	sink.WriteVarUint(toChainId)
+	preResult, err := this.native.PreExecInvokeNativeContract(
+		TX_VERSION,
+		LockProxyContractAddress,
+		lock_proxy.GET_ASSET_HASH_NAME,
+		sink.Bytes(),
+	)
+	if err != nil {
+		return nil, err
+	}
+	assetHash, err := preResult.Result.ToByteArray()
+	if err != nil {
+		return nil, err
+	}
+	return assetHash, nil
+}
+
+func (this *LockProxy) GetCrossedAmount(sourceAssetAddress common.Address, toChainId uint64) (uint64, error) {
+	sink := common.NewZeroCopySink(nil)
+	sink.WriteAddress(sourceAssetAddress)
+	sink.WriteVarUint(toChainId)
+	preResult, err := this.native.PreExecInvokeNativeContract(
+		TX_VERSION,
+		LockProxyContractAddress,
+		lock_proxy.GET_CROSSED_AMOUNT_NAME,
+		sink.Bytes(),
+	)
+	if err != nil {
+		return 0, err
+	}
+	crossedAmount, err := preResult.Result.ToBigInteger()
+	return crossedAmount.Uint64(), nil
+}
+
+func (this *LockProxy) GetCrossedLimit(sourceAssetAddress common.Address, toChainId uint64) (uint64, error) {
+	sink := common.NewZeroCopySink(nil)
+	sink.WriteAddress(sourceAssetAddress)
+	sink.WriteVarUint(toChainId)
+	preResult, err := this.native.PreExecInvokeNativeContract(
+		TX_VERSION,
+		LockProxyContractAddress,
+		lock_proxy.GET_CROSSED_LIMIT_NAME,
+		sink.Bytes(),
+	)
+	if err != nil {
+		return 0, err
+	}
+	crossedAmount, err := preResult.Result.ToBigInteger()
+	return crossedAmount.Uint64(), nil
 }
