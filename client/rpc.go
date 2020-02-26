@@ -150,6 +150,10 @@ func (this *RpcClient) getCrossStatesProof(qid string, height uint32, key string
 	return this.sendRpcRequest(qid, RPC_GET_CROSS_STATES_PROOF, []interface{}{height, key})
 }
 
+func (this *RpcClient) getHeaderByHeight(qid string, height uint32) ([]byte, error) {
+	return this.sendRpcRequest(qid, RPC_GET_HEADER_BY_HEIGHT, []interface{}{height})
+}
+
 func (this *RpcClient) getMemPoolTxState(qid, txHash string) ([]byte, error) {
 	return this.sendRpcRequest(qid, RPC_GET_MEM_POOL_TX_STATE, []interface{}{txHash})
 }

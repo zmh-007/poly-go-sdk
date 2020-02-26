@@ -207,6 +207,18 @@ func GetBlockTxHashes(data []byte) (*sdkcom.BlockTxHashes, error) {
 	blockTxHashes.Transactions = txHashes
 	return blockTxHashes, nil
 }
+func GetHeader(data []byte) (*types.Header, error) {
+	hexStr := ""
+	err := json.Unmarshal(data, &hexStr)
+	if err != nil {
+		return nil, fmt.Errorf("json.Unmarshal error:%s", err)
+	}
+	blockData, err := hex.DecodeString(hexStr)
+	if err != nil {
+		return nil, fmt.Errorf("hex.DecodeString error:%s", err)
+	}
+	return types.HeaderFromRawBytes(blockData)
+}
 
 func GetMemPoolTxState(data []byte) (*sdkcom.MemPoolTxState, error) {
 	txState := &sdkcom.MemPoolTxState{}

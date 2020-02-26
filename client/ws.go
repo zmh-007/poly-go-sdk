@@ -668,6 +668,10 @@ func (this *WSClient) getCrossStatesProof(qid string, height uint32, key string)
 	return nil, fmt.Errorf("Does not support GetCrossStatesProof for websocket")
 }
 
+func (this *WSClient) getHeaderByHeight(qid string, height uint32) ([]byte, error) {
+	return nil, fmt.Errorf("Does not support GetHeaderByHeight for websocket")
+}
+
 func (this *WSClient) getSmartContractEvent(qid, txHash string) ([]byte, error) {
 	return this.sendSyncWSRequest(qid, WS_ACTION_GET_SMARTCONTRACT_BY_HASH, map[string]interface{}{"Hash": txHash})
 }

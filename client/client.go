@@ -236,6 +236,19 @@ func (this *ClientMgr) GetCrossStatesProof(height uint32, key string) (*sdkcom.C
 	return utils.GetCrossStatesProof(data)
 }
 
+func (this *ClientMgr) GetHeaderByHeight(height uint32) (*types.Header, error) {
+	client := this.getClient()
+	if client == nil {
+		return nil, fmt.Errorf("don't have available client of ORChain")
+	}
+	data, err := client.getHeaderByHeight(this.getNextQid(), height)
+	if err != nil {
+		return nil, err
+	}
+	return utils.GetHeader(data)
+
+}
+
 func (this *ClientMgr) GetMemPoolTxState(txHash string) (*sdkcom.MemPoolTxState, error) {
 	client := this.getClient()
 	if client == nil {

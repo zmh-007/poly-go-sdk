@@ -159,6 +159,10 @@ func (this RestClient) getCrossStatesProof(qid string, height uint32, key string
 	return nil, fmt.Errorf("Does not support GetCrossStatesProof for websocket")
 }
 
+func (this RestClient) getHeaderByHeight(qid string, height uint32) ([]byte, error) {
+	return nil, fmt.Errorf("Does not support GetHeaderByHeight for websocket")
+}
+
 func (this *RestClient) getMemPoolTxState(qid, txHash string) ([]byte, error) {
 	reqPath := GET_MEMPOOL_TXSTATE + txHash
 	return this.sendRestGetRequest(reqPath)
