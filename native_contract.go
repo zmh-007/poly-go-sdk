@@ -2,6 +2,8 @@ package multi_chain_go_sdk
 
 import (
 	"fmt"
+	"math/big"
+
 	sdkcom "github.com/ontio/multi-chain-go-sdk/common"
 	"github.com/ontio/multi-chain/common"
 	"github.com/ontio/multi-chain/core/types"
@@ -17,7 +19,6 @@ import (
 	mcnsu "github.com/ontio/multi-chain/native/service/utils"
 	"github.com/ontio/multi-chain/native/states"
 	"github.com/ontio/ontology-crypto/keypair"
-	"math/big"
 )
 
 var (
@@ -281,7 +282,6 @@ type SideChainManager struct {
 }
 
 func (this *SideChainManager) NewRegisterSideChainTransaction(address string, chainId, router uint64, name string, blocksToWait uint64) (*types.Transaction, error) {
-
 	state := &side_chain_manager.RegisterSideChainParam{
 		Address:      address,
 		ChainId:      chainId,
@@ -303,7 +303,6 @@ func (this *SideChainManager) NewRegisterSideChainTransaction(address string, ch
 		sink.Bytes())
 }
 func (this *SideChainManager) RegisterSideChain(address string, chainId, router uint64, name string, blocksToWait uint64, signer *Account) (common.Uint256, error) {
-
 	tx, err := this.NewRegisterSideChainTransaction(address, chainId, router, name, blocksToWait)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -315,10 +314,10 @@ func (this *SideChainManager) RegisterSideChain(address string, chainId, router 
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *SideChainManager) NewApproveRegisterSideChainTransaction(chainId uint64) (*types.Transaction, error) {
-
+func (this *SideChainManager) NewApproveRegisterSideChainTransaction(chainId uint64, address common.Address) (*types.Transaction, error) {
 	state := &side_chain_manager.ChainidParam{
 		Chainid: chainId,
+		Address: address,
 	}
 
 	sink := new(common.ZeroCopySink)
@@ -330,25 +329,12 @@ func (this *SideChainManager) NewApproveRegisterSideChainTransaction(chainId uin
 		side_chain_manager.APPROVE_REGISTER_SIDE_CHAIN,
 		sink.Bytes())
 }
-func (this *SideChainManager) ApproveRegisterSideChain(chainId uint64, signers []*Account) (common.Uint256, error) {
-
-	tx, err := this.NewApproveRegisterSideChainTransaction(chainId)
+func (this *SideChainManager) ApproveRegisterSideChain(chainId uint64, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewApproveRegisterSideChainTransaction(chainId, signer.Address)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
-
-	pubKeys := make([]keypair.PublicKey, 0)
-	for _, acc := range signers {
-		pubKeys = append(pubKeys, acc.PublicKey)
-	}
-
-	for _, signer := range signers {
-		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
-		if err != nil {
-			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
-		}
-	}
-
+	err = this.mcSdk.SignToTransaction(tx, signer)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
@@ -356,7 +342,6 @@ func (this *SideChainManager) ApproveRegisterSideChain(chainId uint64, signers [
 }
 
 func (this *SideChainManager) NewUpdateSideChainTransaction(address string, chainId, router uint64, name string, blocksToWait uint64) (*types.Transaction, error) {
-
 	state := &side_chain_manager.RegisterSideChainParam{
 		Address:      address,
 		ChainId:      chainId,
@@ -378,7 +363,6 @@ func (this *SideChainManager) NewUpdateSideChainTransaction(address string, chai
 		sink.Bytes())
 }
 func (this *SideChainManager) UpdateSideChain(address string, chainId, router uint64, name string, blocksToWait uint64, signer *Account) (common.Uint256, error) {
-
 	tx, err := this.NewUpdateSideChainTransaction(address, chainId, router, name, blocksToWait)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -390,9 +374,10 @@ func (this *SideChainManager) UpdateSideChain(address string, chainId, router ui
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *SideChainManager) NewApproveUpdateSideChainTransaction(chainId uint64) (*types.Transaction, error) {
+func (this *SideChainManager) NewApproveUpdateSideChainTransaction(chainId uint64, address common.Address) (*types.Transaction, error) {
 	state := &side_chain_manager.ChainidParam{
 		Chainid: chainId,
+		Address: address,
 	}
 
 	sink := new(common.ZeroCopySink)
@@ -404,33 +389,22 @@ func (this *SideChainManager) NewApproveUpdateSideChainTransaction(chainId uint6
 		side_chain_manager.APPROVE_UPDATE_SIDE_CHAIN,
 		sink.Bytes())
 }
-func (this *SideChainManager) ApproveUpdateSideChain(chainId uint64, signers []*Account) (common.Uint256, error) {
-	tx, err := this.NewApproveUpdateSideChainTransaction(chainId)
+func (this *SideChainManager) ApproveUpdateSideChain(chainId uint64, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewApproveUpdateSideChainTransaction(chainId, signer.Address)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
-
-	pubKeys := make([]keypair.PublicKey, 0)
-	for _, acc := range signers {
-		pubKeys = append(pubKeys, acc.PublicKey)
-	}
-
-	for _, signer := range signers {
-		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
-		if err != nil {
-			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
-		}
-	}
-
+	err = this.mcSdk.SignToTransaction(tx, signer)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *SideChainManager) NewRemoveSideChainTransaction(chainId uint64) (*types.Transaction, error) {
+func (this *SideChainManager) NewRemoveSideChainTransaction(chainId uint64, address common.Address) (*types.Transaction, error) {
 	state := &side_chain_manager.ChainidParam{
 		Chainid: chainId,
+		Address: address,
 	}
 
 	sink := new(common.ZeroCopySink)
@@ -442,24 +416,12 @@ func (this *SideChainManager) NewRemoveSideChainTransaction(chainId uint64) (*ty
 		side_chain_manager.REMOVE_SIDE_CHAIN,
 		sink.Bytes())
 }
-func (this *SideChainManager) RemoveSideChain(chainId uint64, signers []*Account) (common.Uint256, error) {
-	tx, err := this.NewRemoveSideChainTransaction(chainId)
+func (this *SideChainManager) RemoveSideChain(chainId uint64, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewRemoveSideChainTransaction(chainId, signer.Address)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
-
-	pubKeys := make([]keypair.PublicKey, 0)
-	for _, acc := range signers {
-		pubKeys = append(pubKeys, acc.PublicKey)
-	}
-
-	for _, signer := range signers {
-		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
-		if err != nil {
-			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
-		}
-	}
-
+	err = this.mcSdk.SignToTransaction(tx, signer)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
@@ -505,11 +467,10 @@ type NodeManager struct {
 	native *NativeContract
 }
 
-func (this *NodeManager) NewRegisterCandidateTransaction(peerPubkey string, address []byte, pos uint64) (*types.Transaction, error) {
+func (this *NodeManager) NewRegisterCandidateTransaction(peerPubkey string, address common.Address) (*types.Transaction, error) {
 	state := &node_manager.RegisterPeerParam{
 		PeerPubkey: peerPubkey,
 		Address:    address,
-		Pos:        pos,
 	}
 
 	sink := new(common.ZeroCopySink)
@@ -522,8 +483,8 @@ func (this *NodeManager) NewRegisterCandidateTransaction(peerPubkey string, addr
 		sink.Bytes())
 }
 
-func (this *NodeManager) RegisterCandidate(peerPubkey string, address []byte, pos uint64, signer *Account) (common.Uint256, error) {
-	tx, err := this.NewRegisterCandidateTransaction(peerPubkey, address, pos)
+func (this *NodeManager) RegisterCandidate(peerPubkey string, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewRegisterCandidateTransaction(peerPubkey, signer.Address)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
@@ -534,7 +495,7 @@ func (this *NodeManager) RegisterCandidate(peerPubkey string, address []byte, po
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *NodeManager) NewUnRegisterCandidateTransaction(peerPubkey string, address []byte) (*types.Transaction, error) {
+func (this *NodeManager) NewUnRegisterCandidateTransaction(peerPubkey string, address common.Address) (*types.Transaction, error) {
 	state := &node_manager.PeerParam2{
 		PeerPubkey: peerPubkey,
 		Address:    address,
@@ -549,8 +510,8 @@ func (this *NodeManager) NewUnRegisterCandidateTransaction(peerPubkey string, ad
 		node_manager.UNREGISTER_CANDIDATE,
 		sink.Bytes())
 }
-func (this *NodeManager) UnRegisterCandidate(peerPubkey string, address []byte, signer *Account) (common.Uint256, error) {
-	tx, err := this.NewUnRegisterCandidateTransaction(peerPubkey, address)
+func (this *NodeManager) UnRegisterCandidate(peerPubkey string, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewUnRegisterCandidateTransaction(peerPubkey, signer.Address)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
@@ -561,7 +522,7 @@ func (this *NodeManager) UnRegisterCandidate(peerPubkey string, address []byte, 
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *NodeManager) NewQuitNodeTransaction(peerPubkey string, address []byte) (*types.Transaction, error) {
+func (this *NodeManager) NewQuitNodeTransaction(peerPubkey string, address common.Address) (*types.Transaction, error) {
 	state := &node_manager.PeerParam2{
 		PeerPubkey: peerPubkey,
 		Address:    address,
@@ -576,8 +537,8 @@ func (this *NodeManager) NewQuitNodeTransaction(peerPubkey string, address []byt
 		node_manager.QUIT_NODE,
 		sink.Bytes())
 }
-func (this *NodeManager) QuitNode(peerPubkey string, address []byte, signer *Account) (common.Uint256, error) {
-	tx, err := this.NewUnRegisterCandidateTransaction(peerPubkey, address)
+func (this *NodeManager) QuitNode(peerPubkey string, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewQuitNodeTransaction(peerPubkey, signer.Address)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
@@ -588,9 +549,10 @@ func (this *NodeManager) QuitNode(peerPubkey string, address []byte, signer *Acc
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *NodeManager) NewApproveCandidateTransaction(peerPubkey string) (*types.Transaction, error) {
+func (this *NodeManager) NewApproveCandidateTransaction(peerPubkey string, address common.Address) (*types.Transaction, error) {
 	state := &node_manager.PeerParam{
 		PeerPubkey: peerPubkey,
+		Address:    address,
 	}
 
 	sink := new(common.ZeroCopySink)
@@ -602,33 +564,23 @@ func (this *NodeManager) NewApproveCandidateTransaction(peerPubkey string) (*typ
 		node_manager.APPROVE_CANDIDATE,
 		sink.Bytes())
 }
-func (this *NodeManager) ApproveCandidate(peerPubkey string, signers []*Account) (common.Uint256, error) {
-	tx, err := this.NewApproveCandidateTransaction(peerPubkey)
+
+func (this *NodeManager) ApproveCandidate(peerPubkey string, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewApproveCandidateTransaction(peerPubkey, signer.Address)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
-
-	pubKeys := make([]keypair.PublicKey, 0)
-	for _, acc := range signers {
-		pubKeys = append(pubKeys, acc.PublicKey)
-	}
-
-	for _, signer := range signers {
-		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
-		if err != nil {
-			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
-		}
-	}
-
+	err = this.mcSdk.SignToTransaction(tx, signer)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *NodeManager) NewRejectCandidateTransaction(peerPubkey string) (*types.Transaction, error) {
+func (this *NodeManager) NewRejectCandidateTransaction(peerPubkey string, address common.Address) (*types.Transaction, error) {
 	state := &node_manager.PeerParam{
 		PeerPubkey: peerPubkey,
+		Address:    address,
 	}
 
 	sink := new(common.ZeroCopySink)
@@ -640,33 +592,23 @@ func (this *NodeManager) NewRejectCandidateTransaction(peerPubkey string) (*type
 		node_manager.REGISTER_CANDIDATE,
 		sink.Bytes())
 }
-func (this *NodeManager) RejectCandidate(peerPubkey string, signers []*Account) (common.Uint256, error) {
-	tx, err := this.NewRejectCandidateTransaction(peerPubkey)
+
+func (this *NodeManager) RejectCandidate(peerPubkey string, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewRejectCandidateTransaction(peerPubkey, signer.Address)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
-
-	pubKeys := make([]keypair.PublicKey, 0)
-	for _, acc := range signers {
-		pubKeys = append(pubKeys, acc.PublicKey)
-	}
-
-	for _, signer := range signers {
-		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
-		if err != nil {
-			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
-		}
-	}
-
+	err = this.mcSdk.SignToTransaction(tx, signer)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *NodeManager) NewBlackNodeTransaction(peerPubkeyList []string) (*types.Transaction, error) {
+func (this *NodeManager) NewBlackNodeTransaction(peerPubkeyList []string, address common.Address) (*types.Transaction, error) {
 	state := &node_manager.PeerListParam{
 		PeerPubkeyList: peerPubkeyList,
+		Address:        address,
 	}
 
 	sink := new(common.ZeroCopySink)
@@ -678,33 +620,23 @@ func (this *NodeManager) NewBlackNodeTransaction(peerPubkeyList []string) (*type
 		node_manager.BLACK_NODE,
 		sink.Bytes())
 }
-func (this *NodeManager) BlackNode(peerPubkeyList []string, signers []*Account) (common.Uint256, error) {
-	tx, err := this.NewBlackNodeTransaction(peerPubkeyList)
+
+func (this *NodeManager) BlackNode(peerPubkeyList []string, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewBlackNodeTransaction(peerPubkeyList, signer.Address)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
-
-	pubKeys := make([]keypair.PublicKey, 0)
-	for _, acc := range signers {
-		pubKeys = append(pubKeys, acc.PublicKey)
-	}
-
-	for _, signer := range signers {
-		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
-		if err != nil {
-			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
-		}
-	}
-
+	err = this.mcSdk.SignToTransaction(tx, signer)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *NodeManager) NewWhiteNodeTransaction(peerPubkey string) (*types.Transaction, error) {
+func (this *NodeManager) NewWhiteNodeTransaction(peerPubkey string, address common.Address) (*types.Transaction, error) {
 	state := &node_manager.PeerParam{
 		PeerPubkey: peerPubkey,
+		Address:    address,
 	}
 
 	sink := new(common.ZeroCopySink)
@@ -716,78 +648,9 @@ func (this *NodeManager) NewWhiteNodeTransaction(peerPubkey string) (*types.Tran
 		node_manager.WHITE_NODE,
 		sink.Bytes())
 }
-func (this *NodeManager) WhiteNode(peerPubkey string, signers []*Account) (common.Uint256, error) {
-	tx, err := this.NewRejectCandidateTransaction(peerPubkey)
-	if err != nil {
-		return common.UINT256_EMPTY, err
-	}
 
-	pubKeys := make([]keypair.PublicKey, 0)
-	for _, acc := range signers {
-		pubKeys = append(pubKeys, acc.PublicKey)
-	}
-
-	for _, signer := range signers {
-		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
-		if err != nil {
-			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
-		}
-	}
-
-	if err != nil {
-		return common.UINT256_EMPTY, err
-	}
-	return this.mcSdk.SendTransaction(tx)
-}
-
-func (this *NodeManager) NewAddPosTransaction(peerPubkey string, address []byte, pos uint64) (*types.Transaction, error) {
-	state := &node_manager.RegisterPeerParam{
-		PeerPubkey: peerPubkey,
-		Address:    address,
-		Pos:        pos,
-	}
-
-	sink := new(common.ZeroCopySink)
-	state.Serialization(sink)
-
-	return this.native.NewNativeInvokeTransaction(
-		TX_VERSION,
-		NodeManagerContractAddress,
-		node_manager.ADD_POS,
-		sink.Bytes())
-}
-
-func (this *NodeManager) AddPos(peerPubkey string, address []byte, pos uint64, signer *Account) (common.Uint256, error) {
-	tx, err := this.NewAddPosTransaction(peerPubkey, address, pos)
-	if err != nil {
-		return common.UINT256_EMPTY, err
-	}
-	err = this.mcSdk.SignToTransaction(tx, signer)
-	if err != nil {
-		return common.UINT256_EMPTY, err
-	}
-	return this.mcSdk.SendTransaction(tx)
-}
-
-func (this *NodeManager) NewReducePosTransaction(peerPubkey string, address []byte, pos uint64) (*types.Transaction, error) {
-	state := &node_manager.RegisterPeerParam{
-		PeerPubkey: peerPubkey,
-		Address:    address,
-		Pos:        pos,
-	}
-
-	sink := new(common.ZeroCopySink)
-	state.Serialization(sink)
-
-	return this.native.NewNativeInvokeTransaction(
-		TX_VERSION,
-		NodeManagerContractAddress,
-		node_manager.REDUCE_POS,
-		sink.Bytes())
-}
-
-func (this *NodeManager) ReducePos(peerPubkey string, address []byte, pos uint64, signer *Account) (common.Uint256, error) {
-	tx, err := this.NewReducePosTransaction(peerPubkey, address, pos)
+func (this *NodeManager) WhiteNode(peerPubkey string, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewWhiteNodeTransaction(peerPubkey, signer.Address)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
@@ -799,11 +662,15 @@ func (this *NodeManager) ReducePos(peerPubkey string, address []byte, pos uint64
 }
 
 func (this *NodeManager) NewUpdateConfigTransaction(blockMsgDelay, hashMsgDelay,
-	peerHandshakeTimeout uint32) (*types.Transaction, error) {
-	state := &node_manager.Configuration{
-		BlockMsgDelay:        blockMsgDelay,
-		HashMsgDelay:         hashMsgDelay,
-		PeerHandshakeTimeout: peerHandshakeTimeout,
+	peerHandshakeTimeout, maxBlockChangeView uint32, address common.Address) (*types.Transaction, error) {
+	state := &node_manager.UpdateConfigParam{
+		Configuration: &node_manager.Configuration{
+			BlockMsgDelay:        blockMsgDelay,
+			HashMsgDelay:         hashMsgDelay,
+			PeerHandshakeTimeout: peerHandshakeTimeout,
+			MaxBlockChangeView:   maxBlockChangeView,
+		},
+		Address: address,
 	}
 
 	sink := new(common.ZeroCopySink)
@@ -815,25 +682,15 @@ func (this *NodeManager) NewUpdateConfigTransaction(blockMsgDelay, hashMsgDelay,
 		node_manager.UPDATE_CONFIG,
 		sink.Bytes())
 }
+
 func (this *NodeManager) UpdateConfig(blockMsgDelay, hashMsgDelay,
-	peerHandshakeTimeout uint32, signers []*Account) (common.Uint256, error) {
-	tx, err := this.NewUpdateConfigTransaction(blockMsgDelay, hashMsgDelay, peerHandshakeTimeout)
+	peerHandshakeTimeout, maxBlockChangeView uint32, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewUpdateConfigTransaction(blockMsgDelay, hashMsgDelay, peerHandshakeTimeout, maxBlockChangeView,
+		signer.Address)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
-
-	pubKeys := make([]keypair.PublicKey, 0)
-	for _, acc := range signers {
-		pubKeys = append(pubKeys, acc.PublicKey)
-	}
-
-	for _, signer := range signers {
-		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
-		if err != nil {
-			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
-		}
-	}
-
+	err = this.mcSdk.SignToTransaction(tx, signer)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
@@ -845,9 +702,10 @@ type RelayerManager struct {
 	native *NativeContract
 }
 
-func (this *RelayerManager) NewRegisterRelayerTransaction(addressList [][]byte) (*types.Transaction, error) {
+func (this *RelayerManager) NewRegisterRelayerTransaction(addressList []common.Address, address common.Address) (*types.Transaction, error) {
 	state := &relayer_manager.RelayerListParam{
 		AddressList: addressList,
+		Address:     address,
 	}
 
 	sink := new(common.ZeroCopySink)
@@ -859,33 +717,23 @@ func (this *RelayerManager) NewRegisterRelayerTransaction(addressList [][]byte) 
 		relayer_manager.REGISTER_RELAYER,
 		sink.Bytes())
 }
-func (this *RelayerManager) RegisterRelayer(addressList [][]byte, signers []*Account) (common.Uint256, error) {
-	tx, err := this.NewRegisterRelayerTransaction(addressList)
+
+func (this *RelayerManager) RegisterRelayer(addressList []common.Address, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewRegisterRelayerTransaction(addressList, signer.Address)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
-
-	pubKeys := make([]keypair.PublicKey, 0)
-	for _, acc := range signers {
-		pubKeys = append(pubKeys, acc.PublicKey)
-	}
-
-	for _, signer := range signers {
-		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
-		if err != nil {
-			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
-		}
-	}
-
+	err = this.mcSdk.SignToTransaction(tx, signer)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *RelayerManager) NewRemoveRelayerTransaction(addressList [][]byte) (*types.Transaction, error) {
+func (this *RelayerManager) NewRemoveRelayerTransaction(addressList []common.Address, address common.Address) (*types.Transaction, error) {
 	state := &relayer_manager.RelayerListParam{
 		AddressList: addressList,
+		Address:     address,
 	}
 
 	sink := new(common.ZeroCopySink)
@@ -897,24 +745,13 @@ func (this *RelayerManager) NewRemoveRelayerTransaction(addressList [][]byte) (*
 		relayer_manager.REMOVE_RELAYER,
 		sink.Bytes())
 }
-func (this *RelayerManager) RemoveRelayer(addressList [][]byte, signers []*Account) (common.Uint256, error) {
-	tx, err := this.NewRemoveRelayerTransaction(addressList)
+
+func (this *RelayerManager) RemoveRelayer(addressList []common.Address, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewRemoveRelayerTransaction(addressList, signer.Address)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
-
-	pubKeys := make([]keypair.PublicKey, 0)
-	for _, acc := range signers {
-		pubKeys = append(pubKeys, acc.PublicKey)
-	}
-
-	for _, signer := range signers {
-		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
-		if err != nil {
-			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
-		}
-	}
-
+	err = this.mcSdk.SignToTransaction(tx, signer)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
@@ -929,6 +766,7 @@ func (this *NodeManager) NewCommitDposTransaction() (*types.Transaction, error) 
 		node_manager.COMMIT_DPOS,
 		[]byte{})
 }
+
 func (this *NodeManager) CommitDpos(signers []*Account) (common.Uint256, error) {
 	tx, err := this.NewCommitDposTransaction()
 	if err != nil {
