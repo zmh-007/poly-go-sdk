@@ -281,7 +281,7 @@ type SideChainManager struct {
 	native *NativeContract
 }
 
-func (this *SideChainManager) NewRegisterSideChainTransaction(address string, chainId, router uint64, name string, blocksToWait uint64) (*types.Transaction, error) {
+func (this *SideChainManager) NewRegisterSideChainTransaction(address common.Address, chainId, router uint64, name string, blocksToWait uint64) (*types.Transaction, error) {
 	state := &side_chain_manager.RegisterSideChainParam{
 		Address:      address,
 		ChainId:      chainId,
@@ -302,7 +302,7 @@ func (this *SideChainManager) NewRegisterSideChainTransaction(address string, ch
 		side_chain_manager.REGISTER_SIDE_CHAIN,
 		sink.Bytes())
 }
-func (this *SideChainManager) RegisterSideChain(address string, chainId, router uint64, name string, blocksToWait uint64, signer *Account) (common.Uint256, error) {
+func (this *SideChainManager) RegisterSideChain(address common.Address, chainId, router uint64, name string, blocksToWait uint64, signer *Account) (common.Uint256, error) {
 	tx, err := this.NewRegisterSideChainTransaction(address, chainId, router, name, blocksToWait)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -341,7 +341,7 @@ func (this *SideChainManager) ApproveRegisterSideChain(chainId uint64, signer *A
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *SideChainManager) NewUpdateSideChainTransaction(address string, chainId, router uint64, name string, blocksToWait uint64) (*types.Transaction, error) {
+func (this *SideChainManager) NewUpdateSideChainTransaction(address common.Address, chainId, router uint64, name string, blocksToWait uint64) (*types.Transaction, error) {
 	state := &side_chain_manager.RegisterSideChainParam{
 		Address:      address,
 		ChainId:      chainId,
@@ -362,7 +362,7 @@ func (this *SideChainManager) NewUpdateSideChainTransaction(address string, chai
 		side_chain_manager.UPDATE_SIDE_CHAIN,
 		sink.Bytes())
 }
-func (this *SideChainManager) UpdateSideChain(address string, chainId, router uint64, name string, blocksToWait uint64, signer *Account) (common.Uint256, error) {
+func (this *SideChainManager) UpdateSideChain(address common.Address, chainId, router uint64, name string, blocksToWait uint64, signer *Account) (common.Uint256, error) {
 	tx, err := this.NewUpdateSideChainTransaction(address, chainId, router, name, blocksToWait)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -401,7 +401,7 @@ func (this *SideChainManager) ApproveUpdateSideChain(chainId uint64, signer *Acc
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *SideChainManager) NewRemoveSideChainTransaction(chainId uint64, address common.Address) (*types.Transaction, error) {
+func (this *SideChainManager) NewQuitSideChainTransaction(chainId uint64, address common.Address) (*types.Transaction, error) {
 	state := &side_chain_manager.ChainidParam{
 		Chainid: chainId,
 		Address: address,
@@ -413,11 +413,38 @@ func (this *SideChainManager) NewRemoveSideChainTransaction(chainId uint64, addr
 	return this.native.NewNativeInvokeTransaction(
 		TX_VERSION,
 		SideChainManagerContractAddress,
-		side_chain_manager.REMOVE_SIDE_CHAIN,
+		side_chain_manager.QUIT_SIDE_CHAIN,
 		sink.Bytes())
 }
-func (this *SideChainManager) RemoveSideChain(chainId uint64, signer *Account) (common.Uint256, error) {
-	tx, err := this.NewRemoveSideChainTransaction(chainId, signer.Address)
+func (this *SideChainManager) QuitSideChain(chainId uint64, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewQuitSideChainTransaction(chainId, signer.Address)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	err = this.mcSdk.SignToTransaction(tx, signer)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	return this.mcSdk.SendTransaction(tx)
+}
+
+func (this *SideChainManager) NewApproveQuitSideChainTransaction(chainId uint64, address common.Address) (*types.Transaction, error) {
+	state := &side_chain_manager.ChainidParam{
+		Chainid: chainId,
+		Address: address,
+	}
+
+	sink := new(common.ZeroCopySink)
+	state.Serialization(sink)
+
+	return this.native.NewNativeInvokeTransaction(
+		TX_VERSION,
+		SideChainManagerContractAddress,
+		side_chain_manager.APPROVE_QUIT_SIDE_CHAIN,
+		sink.Bytes())
+}
+func (this *SideChainManager) ApproveQuitSideChain(chainId uint64, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewQuitSideChainTransaction(chainId, signer.Address)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
@@ -662,7 +689,7 @@ func (this *NodeManager) WhiteNode(peerPubkey string, signer *Account) (common.U
 }
 
 func (this *NodeManager) NewUpdateConfigTransaction(blockMsgDelay, hashMsgDelay,
-	peerHandshakeTimeout, maxBlockChangeView uint32, address common.Address) (*types.Transaction, error) {
+	peerHandshakeTimeout, maxBlockChangeView uint32) (*types.Transaction, error) {
 	state := &node_manager.UpdateConfigParam{
 		Configuration: &node_manager.Configuration{
 			BlockMsgDelay:        blockMsgDelay,
@@ -670,7 +697,6 @@ func (this *NodeManager) NewUpdateConfigTransaction(blockMsgDelay, hashMsgDelay,
 			PeerHandshakeTimeout: peerHandshakeTimeout,
 			MaxBlockChangeView:   maxBlockChangeView,
 		},
-		Address: address,
 	}
 
 	sink := new(common.ZeroCopySink)
@@ -684,13 +710,24 @@ func (this *NodeManager) NewUpdateConfigTransaction(blockMsgDelay, hashMsgDelay,
 }
 
 func (this *NodeManager) UpdateConfig(blockMsgDelay, hashMsgDelay,
-	peerHandshakeTimeout, maxBlockChangeView uint32, signer *Account) (common.Uint256, error) {
-	tx, err := this.NewUpdateConfigTransaction(blockMsgDelay, hashMsgDelay, peerHandshakeTimeout, maxBlockChangeView,
-		signer.Address)
+	peerHandshakeTimeout, maxBlockChangeView uint32, signers []*Account) (common.Uint256, error) {
+	tx, err := this.NewUpdateConfigTransaction(blockMsgDelay, hashMsgDelay, peerHandshakeTimeout, maxBlockChangeView)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
-	err = this.mcSdk.SignToTransaction(tx, signer)
+
+	pubKeys := make([]keypair.PublicKey, 0)
+	for _, acc := range signers {
+		pubKeys = append(pubKeys, acc.PublicKey)
+	}
+
+	for _, signer := range signers {
+		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
+		if err != nil {
+			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
+		}
+	}
+
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
@@ -730,6 +767,34 @@ func (this *RelayerManager) RegisterRelayer(addressList []common.Address, signer
 	return this.mcSdk.SendTransaction(tx)
 }
 
+func (this *RelayerManager) NewApproveRegisterRelayerTransaction(applyID uint64, address common.Address) (*types.Transaction, error) {
+	state := &relayer_manager.ApproveRelayerParam{
+		ID:      applyID,
+		Address: address,
+	}
+
+	sink := new(common.ZeroCopySink)
+	state.Serialization(sink)
+
+	return this.native.NewNativeInvokeTransaction(
+		TX_VERSION,
+		RelayerManagerContractAddress,
+		relayer_manager.APPROVE_REGISTER_RELAYER,
+		sink.Bytes())
+}
+
+func (this *RelayerManager) ApproveRegisterRelayer(applyID uint64, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewApproveRegisterRelayerTransaction(applyID, signer.Address)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	err = this.mcSdk.SignToTransaction(tx, signer)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	return this.mcSdk.SendTransaction(tx)
+}
+
 func (this *RelayerManager) NewRemoveRelayerTransaction(addressList []common.Address, address common.Address) (*types.Transaction, error) {
 	state := &relayer_manager.RelayerListParam{
 		AddressList: addressList,
@@ -748,6 +813,34 @@ func (this *RelayerManager) NewRemoveRelayerTransaction(addressList []common.Add
 
 func (this *RelayerManager) RemoveRelayer(addressList []common.Address, signer *Account) (common.Uint256, error) {
 	tx, err := this.NewRemoveRelayerTransaction(addressList, signer.Address)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	err = this.mcSdk.SignToTransaction(tx, signer)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	return this.mcSdk.SendTransaction(tx)
+}
+
+func (this *RelayerManager) NewApproveRemoveRelayerTransaction(removeID uint64, address common.Address) (*types.Transaction, error) {
+	state := &relayer_manager.ApproveRelayerParam{
+		ID:      removeID,
+		Address: address,
+	}
+
+	sink := new(common.ZeroCopySink)
+	state.Serialization(sink)
+
+	return this.native.NewNativeInvokeTransaction(
+		TX_VERSION,
+		RelayerManagerContractAddress,
+		relayer_manager.APPROVE_REMOVE_RELAYER,
+		sink.Bytes())
+}
+
+func (this *RelayerManager) ApproveRemoveRelayer(removeID uint64, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewApproveRemoveRelayerTransaction(removeID, signer.Address)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
