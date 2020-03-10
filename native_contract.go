@@ -281,13 +281,15 @@ type SideChainManager struct {
 	native *NativeContract
 }
 
-func (this *SideChainManager) NewRegisterSideChainTransaction(address common.Address, chainId, router uint64, name string, blocksToWait uint64) (*types.Transaction, error) {
+func (this *SideChainManager) NewRegisterSideChainTransaction(address common.Address, chainId, router uint64,
+	name string, blocksToWait uint64, CMCCAddress []byte) (*types.Transaction, error) {
 	state := &side_chain_manager.RegisterSideChainParam{
 		Address:      address,
 		ChainId:      chainId,
 		Router:       router,
 		Name:         name,
 		BlocksToWait: blocksToWait,
+		CCMCAddress:  CMCCAddress,
 	}
 
 	sink := new(common.ZeroCopySink)
@@ -302,8 +304,9 @@ func (this *SideChainManager) NewRegisterSideChainTransaction(address common.Add
 		side_chain_manager.REGISTER_SIDE_CHAIN,
 		sink.Bytes())
 }
-func (this *SideChainManager) RegisterSideChain(address common.Address, chainId, router uint64, name string, blocksToWait uint64, signer *Account) (common.Uint256, error) {
-	tx, err := this.NewRegisterSideChainTransaction(address, chainId, router, name, blocksToWait)
+func (this *SideChainManager) RegisterSideChain(address common.Address, chainId, router uint64, name string,
+	blocksToWait uint64, CMCCAddress []byte, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewRegisterSideChainTransaction(address, chainId, router, name, blocksToWait, CMCCAddress)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
@@ -456,13 +459,13 @@ func (this *SideChainManager) ApproveQuitSideChain(chainId uint64, signer *Accou
 }
 
 func (this *SideChainManager) NewRegisterRedeemTransaction(redeemChainID, contractChainID uint64,
-	redeem, contractAddress []byte, address string, signs [][]byte) (*types.Transaction, error) {
+	redeem []byte, cVersion uint64, contractAddress []byte, signs [][]byte) (*types.Transaction, error) {
 	state := &side_chain_manager.RegisterRedeemParam{
 		RedeemChainID:   redeemChainID,
 		ContractChainID: contractChainID,
 		Redeem:          redeem,
+		CVersion:        cVersion,
 		ContractAddress: contractAddress,
-		Address:         address,
 		Signs:           signs,
 	}
 
@@ -476,9 +479,8 @@ func (this *SideChainManager) NewRegisterRedeemTransaction(redeemChainID, contra
 		sink.Bytes())
 }
 func (this *SideChainManager) RegisterRedeem(redeemChainID, contractChainID uint64,
-	redeem, contractAddress []byte, address string, signs [][]byte, signer *Account) (common.Uint256, error) {
-	tx, err := this.NewRegisterRedeemTransaction(redeemChainID, contractChainID, redeem, contractAddress,
-		address, signs)
+	redeem, contractAddress []byte, cVersion uint64, signs [][]byte, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewRegisterRedeemTransaction(redeemChainID, contractChainID, redeem, cVersion, contractAddress, signs)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
