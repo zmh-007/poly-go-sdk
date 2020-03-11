@@ -491,6 +491,41 @@ func (this *SideChainManager) RegisterRedeem(redeemChainID, contractChainID uint
 	return this.mcSdk.SendTransaction(tx)
 }
 
+func (this *SideChainManager) NewSetBtcTxParamTransaction(redeem []byte, redeemId, feeRate, minChange, pver uint64, sigArr [][]byte)  (*types.Transaction, error) {
+	state := &side_chain_manager.BtcTxParam{
+		Detial: &side_chain_manager.BtcTxParamDetial{
+			MinChange: minChange,
+			FeeRate: feeRate,
+			PVersion: pver,
+		},
+		Sigs: sigArr,
+		RedeemChainId: redeemId,
+		Redeem: redeem,
+	}
+
+	sink := new(common.ZeroCopySink)
+	state.Serialization(sink)
+
+	return this.native.NewNativeInvokeTransaction(
+		TX_VERSION,
+		SideChainManagerContractAddress,
+		side_chain_manager.SET_BTC_TX_PARAM,
+		sink.Bytes())
+}
+
+func (this *SideChainManager) SetBtcTxParam(redeem []byte, redeemId, feeRate, minChange, pver uint64, sigArr [][]byte,
+	signer *Account) (common.Uint256, error) {
+	tx, err := this.NewSetBtcTxParamTransaction(redeem, redeemId, feeRate, minChange, pver, sigArr)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	err = this.mcSdk.SignToTransaction(tx, signer)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	return this.mcSdk.SendTransaction(tx)
+}
+
 type NodeManager struct {
 	mcSdk  *MultiChainSdk
 	native *NativeContract
