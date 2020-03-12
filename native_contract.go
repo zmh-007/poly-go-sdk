@@ -344,13 +344,15 @@ func (this *SideChainManager) ApproveRegisterSideChain(chainId uint64, signer *A
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *SideChainManager) NewUpdateSideChainTransaction(address common.Address, chainId, router uint64, name string, blocksToWait uint64) (*types.Transaction, error) {
+func (this *SideChainManager) NewUpdateSideChainTransaction(address common.Address, chainId, router uint64, name string,
+	blocksToWait uint64, CMCCAddress []byte) (*types.Transaction, error) {
 	state := &side_chain_manager.RegisterSideChainParam{
 		Address:      address,
 		ChainId:      chainId,
 		Router:       router,
 		Name:         name,
 		BlocksToWait: blocksToWait,
+		CCMCAddress:  CMCCAddress,
 	}
 
 	sink := new(common.ZeroCopySink)
@@ -365,8 +367,9 @@ func (this *SideChainManager) NewUpdateSideChainTransaction(address common.Addre
 		side_chain_manager.UPDATE_SIDE_CHAIN,
 		sink.Bytes())
 }
-func (this *SideChainManager) UpdateSideChain(address common.Address, chainId, router uint64, name string, blocksToWait uint64, signer *Account) (common.Uint256, error) {
-	tx, err := this.NewUpdateSideChainTransaction(address, chainId, router, name, blocksToWait)
+func (this *SideChainManager) UpdateSideChain(address common.Address, chainId, router uint64, name string,
+	blocksToWait uint64, CMCCAddress []byte, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewUpdateSideChainTransaction(address, chainId, router, name, blocksToWait, CMCCAddress)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
