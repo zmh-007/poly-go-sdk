@@ -148,6 +148,84 @@ func (this *CrossChainManager) ImportOuterTransfer(sourceChainId uint64, txData 
 	return this.mcSdk.SendTransaction(tx)
 }
 
+func (this *CrossChainManager) NewBlackChainTransaction(chainID uint64) (*types.Transaction, error) {
+	state := &ccm.BlackChainParam{
+		ChainID: chainID,
+	}
+
+	sink := new(common.ZeroCopySink)
+	state.Serialization(sink)
+
+	return this.native.NewNativeInvokeTransaction(
+		TX_VERSION,
+		CrossChainManagerContractAddress,
+		ccm.BLACK_CHAIN,
+		sink.Bytes())
+}
+
+func (this *CrossChainManager) BlackChain(chainID uint64, signers []*Account) (common.Uint256, error) {
+	tx, err := this.NewBlackChainTransaction(chainID)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+
+	pubKeys := make([]keypair.PublicKey, 0)
+	for _, acc := range signers {
+		pubKeys = append(pubKeys, acc.PublicKey)
+	}
+
+	for _, signer := range signers {
+		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
+		if err != nil {
+			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
+		}
+	}
+
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	return this.mcSdk.SendTransaction(tx)
+}
+
+func (this *CrossChainManager) NewWhiteChainTransaction(chainID uint64) (*types.Transaction, error) {
+	state := &ccm.BlackChainParam{
+		ChainID: chainID,
+	}
+
+	sink := new(common.ZeroCopySink)
+	state.Serialization(sink)
+
+	return this.native.NewNativeInvokeTransaction(
+		TX_VERSION,
+		CrossChainManagerContractAddress,
+		ccm.WHITE_CHAIN,
+		sink.Bytes())
+}
+
+func (this *CrossChainManager) WhiteChain(chainID uint64, signers []*Account) (common.Uint256, error) {
+	tx, err := this.NewWhiteChainTransaction(chainID)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+
+	pubKeys := make([]keypair.PublicKey, 0)
+	for _, acc := range signers {
+		pubKeys = append(pubKeys, acc.PublicKey)
+	}
+
+	for _, signer := range signers {
+		err = this.mcSdk.MultiSignToTransaction(tx, uint16((5*len(pubKeys)+6)/7), pubKeys, signer)
+		if err != nil {
+			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
+		}
+	}
+
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	return this.mcSdk.SendTransaction(tx)
+}
+
 type HeaderSync struct {
 	mcSdk  *MultiChainSdk
 	native *NativeContract
