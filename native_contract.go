@@ -33,18 +33,16 @@ var OPCODE_IN_PAYLOAD = map[byte]bool{0xc6: true, 0x6b: true, 0x6a: true, 0xc8: 
 	0x7c: true, 0xc1: true}
 
 type NativeContract struct {
-	mcSdk     *MultiChainSdk
-	Cc        *CrossChain
-	Hs        *HeaderSync
-	Ccm       *CrossChainManager
-	Scm       *SideChainManager
-	Nm        *NodeManager
-	Rm        *RelayerManager
+	mcSdk *MultiChainSdk
+	Hs    *HeaderSync
+	Ccm   *CrossChainManager
+	Scm   *SideChainManager
+	Nm    *NodeManager
+	Rm    *RelayerManager
 }
 
 func newNativeContract(mcSdk *MultiChainSdk) *NativeContract {
 	native := &NativeContract{mcSdk: mcSdk}
-	native.Cc = &CrossChain{native: native, mcSdk: mcSdk}
 	native.Hs = &HeaderSync{native: native, mcSdk: mcSdk}
 	native.Ccm = &CrossChainManager{native: native, mcSdk: mcSdk}
 	native.Scm = &SideChainManager{native: native, mcSdk: mcSdk}
@@ -80,18 +78,12 @@ func (this *NativeContract) PreExecInvokeNativeContract(
 	return this.mcSdk.PreExecTransaction(tx)
 }
 
-type CrossChain struct {
-	mcSdk  *MultiChainSdk
-	native *NativeContract
-}
-
 type CrossChainManager struct {
 	mcSdk  *MultiChainSdk
 	native *NativeContract
 }
 
 func (this *CrossChainManager) NewBtcMultiSignTransaction(chainId uint64, redeemKey string, txHash []byte, address string, signs [][]byte) (*types.Transaction, error) {
-
 	state := &nccmc.MultiSignParam{
 		ChainID:   chainId,
 		RedeemKey: redeemKey,
@@ -111,7 +103,6 @@ func (this *CrossChainManager) NewBtcMultiSignTransaction(chainId uint64, redeem
 }
 
 func (this *CrossChainManager) BtcMultiSign(chainId uint64, redeemKey string, txHash []byte, address string, signs [][]byte, signer *Account) (common.Uint256, error) {
-
 	tx, err := this.NewBtcMultiSignTransaction(chainId, redeemKey, txHash, address, signs)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -125,7 +116,6 @@ func (this *CrossChainManager) BtcMultiSign(chainId uint64, redeemKey string, tx
 
 func (this *CrossChainManager) NewImportOuterTransferTransaction(sourceChainId uint64, txData []byte, height uint32,
 	proof []byte, relayerAddress []byte, HeaderOrCrossChainMsg []byte) (*types.Transaction, error) {
-
 	state := &nccmc.EntranceParam{
 		SourceChainID:         sourceChainId,
 		Height:                height,
@@ -147,7 +137,6 @@ func (this *CrossChainManager) NewImportOuterTransferTransaction(sourceChainId u
 
 func (this *CrossChainManager) ImportOuterTransfer(sourceChainId uint64, txData []byte, height uint32, proof []byte,
 	relayerAddress []byte, HeaderOrCrossChainMsg []byte, signer *Account) (common.Uint256, error) {
-
 	tx, err := this.NewImportOuterTransferTransaction(sourceChainId, txData, height, proof, relayerAddress, HeaderOrCrossChainMsg)
 	if err != nil {
 		return common.UINT256_EMPTY, err
@@ -165,7 +154,6 @@ type HeaderSync struct {
 }
 
 func (this *HeaderSync) NewSyncGenesisHeaderTransaction(chainId uint64, genesisHeader []byte) (*types.Transaction, error) {
-
 	state := &hsc.SyncGenesisHeaderParam{
 		ChainID:       chainId,
 		GenesisHeader: genesisHeader,
