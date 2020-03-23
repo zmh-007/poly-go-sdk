@@ -616,7 +616,7 @@ func (this *NodeManager) RegisterCandidate(peerPubkey string, signer *Account) (
 }
 
 func (this *NodeManager) NewUnRegisterCandidateTransaction(peerPubkey string, address common.Address) (*types.Transaction, error) {
-	state := &node_manager.PeerParam2{
+	state := &node_manager.PeerParam{
 		PeerPubkey: peerPubkey,
 		Address:    address,
 	}
@@ -643,7 +643,7 @@ func (this *NodeManager) UnRegisterCandidate(peerPubkey string, signer *Account)
 }
 
 func (this *NodeManager) NewQuitNodeTransaction(peerPubkey string, address common.Address) (*types.Transaction, error) {
-	state := &node_manager.PeerParam2{
+	state := &node_manager.PeerParam{
 		PeerPubkey: peerPubkey,
 		Address:    address,
 	}
