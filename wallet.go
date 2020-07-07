@@ -1,14 +1,14 @@
-package multi_chain_go_sdk
+package poly_go_sdk
 
 import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ontio/multi-chain/common"
-	"github.com/ontio/multi-chain/core/types"
 	"github.com/ontio/ontology-crypto/keypair"
 	s "github.com/ontio/ontology-crypto/signature"
+	"github.com/polynetwork/poly/common"
+	"github.com/polynetwork/poly/core/types"
 	"io/ioutil"
 	"os"
 	"sync"
@@ -34,7 +34,7 @@ type Wallet struct {
 	identityLabelMap map[string]*Identity
 	defIdentity      *Identity
 	path             string
-	ontSdk           *MultiChainSdk
+	ontSdk           *PolySdk
 	lock             sync.RWMutex
 }
 

@@ -23,7 +23,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/ontio/multi-chain/common"
+	"github.com/polynetwork/poly/common"
 	"math/big"
 )
 

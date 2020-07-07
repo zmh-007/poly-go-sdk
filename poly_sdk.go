@@ -17,24 +17,24 @@
  */
 
 //multi_chain sdk in golang. Using for operation with ontology
-package multi_chain_go_sdk
+package poly_go_sdk
 
 import (
 	"encoding/hex"
 	"fmt"
 	"github.com/ontio/go-bip32"
-	"github.com/ontio/multi-chain-go-sdk/bip44"
+	"github.com/polynetwork/poly-go-sdk/bip44"
 	"github.com/tyler-smith/go-bip39"
 	"math/rand"
 	"time"
 
-	"github.com/ontio/multi-chain-go-sdk/client"
-	"github.com/ontio/multi-chain-go-sdk/utils"
-	"github.com/ontio/multi-chain/common"
-	"github.com/ontio/multi-chain/common/constants"
-	"github.com/ontio/multi-chain/core/payload"
-	"github.com/ontio/multi-chain/core/types"
 	"github.com/ontio/ontology-crypto/keypair"
+	"github.com/polynetwork/poly-go-sdk/client"
+	"github.com/polynetwork/poly-go-sdk/utils"
+	"github.com/polynetwork/poly/common"
+	"github.com/polynetwork/poly/common/constants"
+	"github.com/polynetwork/poly/core/payload"
+	"github.com/polynetwork/poly/core/types"
 )
 
 func init() {
@@ -42,21 +42,21 @@ func init() {
 }
 
 //OntologySdk is the main struct for user
-type MultiChainSdk struct {
+type PolySdk struct {
 	client.ClientMgr
 	Native *NativeContract
 }
 
 //NewOntologySdk return OntologySdk.
-func NewMultiChainSdk() *MultiChainSdk {
-	multichainSdk := &MultiChainSdk{}
-	native := newNativeContract(multichainSdk)
-	multichainSdk.Native = native
-	return multichainSdk
+func NewPolySdk() *PolySdk {
+	polySdk := &PolySdk{}
+	native := newNativeContract(polySdk)
+	polySdk.Native = native
+	return polySdk
 }
 
 //CreateWallet return a new wallet
-func (this *MultiChainSdk) CreateWallet(walletFile string) (*Wallet, error) {
+func (this *PolySdk) CreateWallet(walletFile string) (*Wallet, error) {
 	if utils.IsFileExist(walletFile) {
 		return nil, fmt.Errorf("wallet:%s has already exist", walletFile)
 	}
@@ -64,7 +64,7 @@ func (this *MultiChainSdk) CreateWallet(walletFile string) (*Wallet, error) {
 }
 
 //OpenWallet return a wallet instance
-func (this *MultiChainSdk) OpenWallet(walletFile string) (*Wallet, error) {
+func (this *PolySdk) OpenWallet(walletFile string) (*Wallet, error) {
 	return OpenWallet(walletFile)
 }
 
@@ -318,7 +318,7 @@ func (this *MultiChainSdk) OpenWallet(walletFile string) (*Wallet, error) {
 //	}
 //}
 
-func (this *MultiChainSdk) GenerateMnemonicCodesStr() (string, error) {
+func (this *PolySdk) GenerateMnemonicCodesStr() (string, error) {
 	entropy, err := bip39.NewEntropy(128)
 	if err != nil {
 		return "", err
@@ -326,7 +326,7 @@ func (this *MultiChainSdk) GenerateMnemonicCodesStr() (string, error) {
 	return bip39.NewMnemonic(entropy)
 }
 
-func (this *MultiChainSdk) GetPrivateKeyFromMnemonicCodesStrBip44(mnemonicCodesStr string, index uint32) ([]byte, error) {
+func (this *PolySdk) GetPrivateKeyFromMnemonicCodesStrBip44(mnemonicCodesStr string, index uint32) ([]byte, error) {
 	if mnemonicCodesStr == "" {
 		return nil, fmt.Errorf("mnemonicCodesStr should not be nil")
 	}
@@ -356,7 +356,7 @@ func (this *MultiChainSdk) GetPrivateKeyFromMnemonicCodesStrBip44(mnemonicCodesS
 }
 
 //NewInvokeTransaction return smart contract invoke transaction
-func (this *MultiChainSdk) NewInvokeTransaction(invokeCode []byte) *types.Transaction {
+func (this *PolySdk) NewInvokeTransaction(invokeCode []byte) *types.Transaction {
 	invokePayload := &payload.InvokeCode{
 		Code: invokeCode,
 	}
@@ -376,7 +376,7 @@ func (this *MultiChainSdk) NewInvokeTransaction(invokeCode []byte) *types.Transa
 	return tx
 }
 
-func (this *MultiChainSdk) SignToTransaction(tx *types.Transaction, signer Signer) error {
+func (this *PolySdk) SignToTransaction(tx *types.Transaction, signer Signer) error {
 	txHash := tx.Hash()
 	sigData, err := signer.Sign(txHash.ToArray())
 	if err != nil {
@@ -405,7 +405,7 @@ func (this *MultiChainSdk) SignToTransaction(tx *types.Transaction, signer Signe
 	return nil
 }
 
-func (this *MultiChainSdk) MultiSignToTransaction(tx *types.Transaction, m uint16, pubKeys []keypair.PublicKey, signer Signer) error {
+func (this *PolySdk) MultiSignToTransaction(tx *types.Transaction, m uint16, pubKeys []keypair.PublicKey, signer Signer) error {
 	pkSize := len(pubKeys)
 	if m == 0 || int(m) > pkSize || pkSize > constants.MULTI_SIG_MAX_PUBKEY_SIZE {
 		return fmt.Errorf("both m and number of pub key must larger than 0, and small than %d, and m must smaller than pub key number", constants.MULTI_SIG_MAX_PUBKEY_SIZE)
@@ -457,7 +457,7 @@ func (this *MultiChainSdk) MultiSignToTransaction(tx *types.Transaction, m uint1
 	return nil
 }
 
-func (this *MultiChainSdk) GetTxData(tx *types.Transaction) (string, error) {
+func (this *PolySdk) GetTxData(tx *types.Transaction) (string, error) {
 	sink := common.ZeroCopySink{}
 	tx.Serialization(&sink)
 	rawtx := hex.EncodeToString(sink.Bytes())
@@ -472,7 +472,7 @@ type TransferEvent struct {
 }
 
 //
-//func (this *MultiChainSdk) ParseNaitveTransferEvent(event *event.NotifyEventInfo) (*TransferEvent, error) {
+//func (this *PolySdk) ParseNaitveTransferEvent(event *event.NotifyEventInfo) (*TransferEvent, error) {
 //	if event == nil {
 //		return nil, fmt.Errorf("event is nil")
 //	}
@@ -511,7 +511,7 @@ type TransferEvent struct {
 //	}
 //}
 //
-//func (this *MultiChainSdk) GetMutableTx(rawTx string) (*types.MutableTransaction, error) {
+//func (this *PolySdk) GetMutableTx(rawTx string) (*types.MutableTransaction, error) {
 //	txData, err := hex.DecodeString(rawTx)
 //	if err != nil {
 //		return nil, fmt.Errorf("RawTx hex decode error:%s", err)
@@ -527,7 +527,7 @@ type TransferEvent struct {
 //	return mutTx, nil
 //}
 
-func (this *MultiChainSdk) GetMultiAddr(pubkeys []keypair.PublicKey, m int) (string, error) {
+func (this *PolySdk) GetMultiAddr(pubkeys []keypair.PublicKey, m int) (string, error) {
 	addr, err := types.AddressFromMultiPubKeys(pubkeys, m)
 	if err != nil {
 		return "", fmt.Errorf("GetMultiAddrs error:%s", err)
@@ -535,7 +535,7 @@ func (this *MultiChainSdk) GetMultiAddr(pubkeys []keypair.PublicKey, m int) (str
 	return addr.ToBase58(), nil
 }
 
-func (this *MultiChainSdk) GetAdddrByPubKey(pubKey keypair.PublicKey) string {
+func (this *PolySdk) GetAdddrByPubKey(pubKey keypair.PublicKey) string {
 	address := types.AddressFromPubKey(pubKey)
 	return address.ToBase58()
 }

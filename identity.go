@@ -1,4 +1,4 @@
-package multi_chain_go_sdk
+package poly_go_sdk
 
 import (
 	"bytes"
@@ -7,9 +7,9 @@ import (
 	"encoding/hex"
 	"fmt"
 	base58 "github.com/itchyny/base58-go"
-	"github.com/ontio/multi-chain/core/types"
 	"github.com/ontio/ontology-crypto/keypair"
 	s "github.com/ontio/ontology-crypto/signature"
+	"github.com/polynetwork/poly/core/types"
 	"golang.org/x/crypto/ripemd160"
 	"math/big"
 )

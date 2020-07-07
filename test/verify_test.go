@@ -2,13 +2,13 @@ package test
 
 import (
 	"fmt"
-	"github.com/ontio/multi-chain-go-sdk"
-	"github.com/ontio/multi-chain/common"
-	mcc "github.com/ontio/multi-chain/common"
-	"github.com/ontio/multi-chain/core/signature"
-	"github.com/ontio/multi-chain/core/types"
 	"github.com/ontio/ontology-crypto/keypair"
 	sig "github.com/ontio/ontology-crypto/signature"
+	"github.com/polynetwork/poly-go-sdk"
+	"github.com/polynetwork/poly/common"
+	mcc "github.com/polynetwork/poly/common"
+	"github.com/polynetwork/poly/core/signature"
+	"github.com/polynetwork/poly/core/types"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -20,10 +20,10 @@ const (
 )
 
 func TestVerifyTx(t *testing.T) {
-	sdk := multi_chain_go_sdk.NewMultiChainSdk()
+	sdk := poly_go_sdk.NewPolySdk()
 
 	pri1, _ := mcc.HexToBytes(privateK1)
-	signer, _ := multi_chain_go_sdk.NewAccountFromPrivateKey(pri1, sig.SHA256withECDSA)
+	signer, _ := poly_go_sdk.NewAccountFromPrivateKey(pri1, sig.SHA256withECDSA)
 	tx, _ := sdk.Native.Scm.NewRegisterSideChainTransaction(signer.Address.ToBase58(), 234, 2, "chain167", 1)
 
 	err := sdk.SignToTransaction(tx, signer)
@@ -47,16 +47,16 @@ func TestVerifyTx(t *testing.T) {
 }
 
 func TestMultiVerifyTx(t *testing.T) {
-	sdk := multi_chain_go_sdk.NewMultiChainSdk()
+	sdk := poly_go_sdk.NewPolySdk()
 
 	pri1, _ := mcc.HexToBytes(privateK1)
-	signer1, _ := multi_chain_go_sdk.NewAccountFromPrivateKey(pri1, sig.SHA256withECDSA)
+	signer1, _ := poly_go_sdk.NewAccountFromPrivateKey(pri1, sig.SHA256withECDSA)
 
 	pri2, _ := mcc.HexToBytes(privateK2)
-	signer2, _ := multi_chain_go_sdk.NewAccountFromPrivateKey(pri2, sig.SHA256withECDSA)
+	signer2, _ := poly_go_sdk.NewAccountFromPrivateKey(pri2, sig.SHA256withECDSA)
 
 	pri3, _ := mcc.HexToBytes(privateK3)
-	signer3, _ := multi_chain_go_sdk.NewAccountFromPrivateKey(pri3, sig.SHA256withECDSA)
+	signer3, _ := poly_go_sdk.NewAccountFromPrivateKey(pri3, sig.SHA256withECDSA)
 
 	tx, err := sdk.Native.Scm.NewApproveRegisterSideChainTransaction(112)
 
@@ -71,7 +71,7 @@ func TestMultiVerifyTx(t *testing.T) {
 	//Hence, must do serialization
 	fmt.Println("after serialization, txHash = ", tx.Hash())
 
-	signers := make([]*multi_chain_go_sdk.Account, 0)
+	signers := make([]*poly_go_sdk.Account, 0)
 	signers = append(signers, signer1)
 	signers = append(signers, signer2)
 	signers = append(signers, signer3)

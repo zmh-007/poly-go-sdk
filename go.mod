@@ -1,4 +1,4 @@
-module github.com/ontio/multi-chain-go-sdk
+module github.com/polynetwork/poly-go-sdk
 
 go 1.14
 
@@ -7,11 +7,13 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/itchyny/base58-go v0.1.0
 	github.com/ontio/go-bip32 v0.0.0-20190520025953-d3cea6894a2b
-	github.com/ontio/multi-chain v0.0.0
-	github.com/ontio/ontology-crypto v1.0.9-0.20200427073653-7eba89bbe29b
-	github.com/stretchr/testify v1.4.0
+	github.com/ontio/ontology v1.11.0
+	github.com/ontio/ontology-crypto v1.0.9
+	github.com/ontio/ontology-go-sdk v1.11.3
+	github.com/polynetwork/poly v0.0.0-00010101000000-000000000000
+	github.com/stretchr/testify v1.5.1
 	github.com/tyler-smith/go-bip39 v1.0.2
-	golang.org/x/crypto v0.0.0-20200429183012-4b2356b1ed79
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 )
 
-replace github.com/ontio/multi-chain v0.0.0 => ./../multi-chain
+replace github.com/polynetwork/poly => ../poly

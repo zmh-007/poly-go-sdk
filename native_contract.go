@@ -1,20 +1,20 @@
-package multi_chain_go_sdk
+package poly_go_sdk
 
 import (
 	"fmt"
-	sdkcom "github.com/ontio/multi-chain-go-sdk/common"
-	"github.com/ontio/multi-chain/common"
-	"github.com/ontio/multi-chain/core/types"
-	ccm "github.com/ontio/multi-chain/native/service/cross_chain_manager"
-	nccmc "github.com/ontio/multi-chain/native/service/cross_chain_manager/common"
-	"github.com/ontio/multi-chain/native/service/governance/node_manager"
-	"github.com/ontio/multi-chain/native/service/governance/relayer_manager"
-	"github.com/ontio/multi-chain/native/service/governance/side_chain_manager"
-	hs "github.com/ontio/multi-chain/native/service/header_sync"
-	hsc "github.com/ontio/multi-chain/native/service/header_sync/common"
-	mcnsu "github.com/ontio/multi-chain/native/service/utils"
-	"github.com/ontio/multi-chain/native/states"
 	"github.com/ontio/ontology-crypto/keypair"
+	sdkcom "github.com/polynetwork/poly-go-sdk/common"
+	"github.com/polynetwork/poly/common"
+	"github.com/polynetwork/poly/core/types"
+	ccm "github.com/polynetwork/poly/native/service/cross_chain_manager"
+	nccmc "github.com/polynetwork/poly/native/service/cross_chain_manager/common"
+	"github.com/polynetwork/poly/native/service/governance/node_manager"
+	"github.com/polynetwork/poly/native/service/governance/relayer_manager"
+	"github.com/polynetwork/poly/native/service/governance/side_chain_manager"
+	hs "github.com/polynetwork/poly/native/service/header_sync"
+	hsc "github.com/polynetwork/poly/native/service/header_sync/common"
+	mcnsu "github.com/polynetwork/poly/native/service/utils"
+	"github.com/polynetwork/poly/native/states"
 )
 
 var (
@@ -33,7 +33,7 @@ var OPCODE_IN_PAYLOAD = map[byte]bool{0xc6: true, 0x6b: true, 0x6a: true, 0xc8: 
 	0x7c: true, 0xc1: true}
 
 type NativeContract struct {
-	mcSdk *MultiChainSdk
+	mcSdk *PolySdk
 	Hs    *HeaderSync
 	Ccm   *CrossChainManager
 	Scm   *SideChainManager
@@ -41,7 +41,7 @@ type NativeContract struct {
 	Rm    *RelayerManager
 }
 
-func newNativeContract(mcSdk *MultiChainSdk) *NativeContract {
+func newNativeContract(mcSdk *PolySdk) *NativeContract {
 	native := &NativeContract{mcSdk: mcSdk}
 	native.Hs = &HeaderSync{native: native, mcSdk: mcSdk}
 	native.Ccm = &CrossChainManager{native: native, mcSdk: mcSdk}
@@ -79,7 +79,7 @@ func (this *NativeContract) PreExecInvokeNativeContract(
 }
 
 type CrossChainManager struct {
-	mcSdk  *MultiChainSdk
+	mcSdk  *PolySdk
 	native *NativeContract
 }
 
@@ -227,7 +227,7 @@ func (this *CrossChainManager) WhiteChain(chainID uint64, signers []*Account) (c
 }
 
 type HeaderSync struct {
-	mcSdk  *MultiChainSdk
+	mcSdk  *PolySdk
 	native *NativeContract
 }
 
@@ -330,7 +330,7 @@ func (this *HeaderSync) SyncCrossChainMsg(chainId uint64, address common.Address
 }
 
 type SideChainManager struct {
-	mcSdk  *MultiChainSdk
+	mcSdk  *PolySdk
 	native *NativeContract
 }
 
@@ -583,7 +583,7 @@ func (this *SideChainManager) SetBtcTxParam(redeem []byte, redeemId, feeRate, mi
 }
 
 type NodeManager struct {
-	mcSdk  *MultiChainSdk
+	mcSdk  *PolySdk
 	native *NativeContract
 }
 
@@ -828,7 +828,7 @@ func (this *NodeManager) UpdateConfig(blockMsgDelay, hashMsgDelay,
 }
 
 type RelayerManager struct {
-	mcSdk  *MultiChainSdk
+	mcSdk  *PolySdk
 	native *NativeContract
 }
 

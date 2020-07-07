@@ -21,10 +21,10 @@ package utils
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/ontio/multi-chain/common"
-	"github.com/ontio/multi-chain/core/signature"
-	"github.com/ontio/multi-chain/core/types"
 	"github.com/ontio/ontology-crypto/keypair"
+	"github.com/polynetwork/poly/common"
+	"github.com/polynetwork/poly/core/signature"
+	"github.com/polynetwork/poly/core/types"
 	"os"
 	"sort"
 )

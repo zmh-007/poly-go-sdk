@@ -1,15 +1,14 @@
-package multi_chain_go_sdk
+package poly_go_sdk
 
 import (
 	"crypto/elliptic"
 	"encoding/hex"
 	"fmt"
-	"github.com/ontio/multi-chain/common"
-	"github.com/ontio/multi-chain/core/types"
 	"github.com/ontio/ontology-crypto/ec"
 	"github.com/ontio/ontology-crypto/keypair"
 	s "github.com/ontio/ontology-crypto/signature"
-	//mca "github.com/ontio/multi-chain/account"
+	"github.com/polynetwork/poly/common"
+	"github.com/polynetwork/poly/core/types"
 )
 
 type Signer interface {

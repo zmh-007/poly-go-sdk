@@ -2,15 +2,15 @@ package test
 
 import (
 	"fmt"
-	oc "github.com/ontio/multi-chain/common"
+	oc "github.com/polynetwork/poly/common"
 	"testing"
 
 	"encoding/hex"
 	"encoding/json"
-	"github.com/ontio/multi-chain-go-sdk"
-	"github.com/ontio/multi-chain-go-sdk/common"
-	common2 "github.com/ontio/multi-chain/native/service/cross_chain_manager/common"
 	"github.com/ontio/ontology-crypto/signature"
+	"github.com/polynetwork/poly-go-sdk"
+	"github.com/polynetwork/poly-go-sdk/common"
+	common2 "github.com/polynetwork/poly/native/service/cross_chain_manager/common"
 )
 
 //const (
@@ -18,9 +18,9 @@ import (
 //)
 
 func TestRegisterSideChain(t *testing.T) {
-	sdk := multi_chain_go_sdk.NewMultiChainSdk()
+	sdk := poly_go_sdk.NewPolySdk()
 	pri, _ := oc.HexToBytes("5f2fe68215476abb9852cfa7da31ef00aa1468782d5ca809da5c4e1390b8ee45")
-	signer, _ := multi_chain_go_sdk.NewAccountFromPrivateKey(pri, signature.SHA256withECDSA)
+	signer, _ := poly_go_sdk.NewAccountFromPrivateKey(pri, signature.SHA256withECDSA)
 	//to, _ := oc.AddressFromBase58("ASUwFccvYFrrWR6vsZhhNszLFNvCLA5qS6")
 	sdk.NewWebSocketClient().Connect("ws://138.91.6.125:40335")
 	//sdk.NewWebSocketClient().Connect("ws://192.168.3.144:40335")
@@ -52,7 +52,7 @@ func TestRegisterSideChain(t *testing.T) {
 }
 
 func TestGetMerkleProof(t *testing.T) {
-	sdk := multi_chain_go_sdk.NewMultiChainSdk()
+	sdk := poly_go_sdk.NewPolySdk()
 	sdk.NewWebSocketClient().Connect("ws://138.91.6.125:40335")
 	merkleProof, err := sdk.ClientMgr.GetMerkleProof("2e211bf859b84dc14b2ce3ecfaa95f26ed3b9818c5a4cfeaa77dec8241c51db9")
 
@@ -64,7 +64,7 @@ func TestGetMerkleProof(t *testing.T) {
 }
 
 func TestGetCrossStatesProof(t *testing.T) {
-	sdk := multi_chain_go_sdk.NewMultiChainSdk()
+	sdk := poly_go_sdk.NewPolySdk()
 	sdk.NewRpcClient().SetAddress("http://138.91.6.125:40336")
 	//sdk.NewWebSocketClient().Connect("ws://192.168.3.144:40335")
 	crossStatesProof, err := sdk.ClientMgr.GetCrossStatesProof(1, "k")

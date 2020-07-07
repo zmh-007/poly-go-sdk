@@ -3,10 +3,10 @@ package client
 import (
 	"encoding/json"
 	"fmt"
-	sdkcom "github.com/ontio/multi-chain-go-sdk/common"
-	"github.com/ontio/multi-chain-go-sdk/utils"
-	"github.com/ontio/multi-chain/common"
-	"github.com/ontio/multi-chain/core/types"
+	sdkcom "github.com/polynetwork/poly-go-sdk/common"
+	"github.com/polynetwork/poly-go-sdk/utils"
+	"github.com/polynetwork/poly/common"
+	"github.com/polynetwork/poly/core/types"
 	"sync/atomic"
 	"time"
 )
