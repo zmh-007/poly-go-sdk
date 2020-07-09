@@ -660,8 +660,8 @@ func (this *WSClient) getSmartContract(qid, contractAddress string) ([]byte, err
 	return this.sendSyncWSRequest(qid, WS_ACTION_GET_CONTRACT, map[string]interface{}{"Hash": contractAddress, "Raw": "1"})
 }
 
-func (this *WSClient) getMerkleProof(qid, txHash string) ([]byte, error) {
-	return this.sendSyncWSRequest(qid, WS_ACTION_GET_MERKLE_PROOF, map[string]interface{}{"Hash": txHash})
+func (this *WSClient) getMerkleProof(qid string, blockHeight, rootHeight uint32) ([]byte, error) {
+	return this.sendSyncWSRequest(qid, WS_ACTION_GET_MERKLE_PROOF, map[string]interface{}{"BlockHeight": strconv.FormatInt(int64(blockHeight), 10), "RootHeight": strconv.FormatInt(int64(rootHeight), 10)})
 }
 
 func (this *WSClient) getCrossStatesProof(qid string, height uint32, key string) ([]byte, error) {

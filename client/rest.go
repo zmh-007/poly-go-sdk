@@ -150,8 +150,8 @@ func (this *RestClient) getSmartContract(qid, contractAddress string) ([]byte, e
 	return this.sendRestGetRequest(reqPath, reqValues)
 }
 
-func (this RestClient) getMerkleProof(qid, txHash string) ([]byte, error) {
-	reqPath := GET_MERKLE_PROOF + txHash
+func (this RestClient) getMerkleProof(qid string, blockHeight, rootHeight uint32) ([]byte, error) {
+	reqPath := fmt.Sprintf("%s%d%s%d", GET_MERKLE_PROOF, blockHeight, "/", rootHeight)
 	return this.sendRestGetRequest(reqPath)
 }
 

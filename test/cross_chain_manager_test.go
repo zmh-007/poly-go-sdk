@@ -3,6 +3,7 @@ package test
 import (
 	"fmt"
 	oc "github.com/polynetwork/poly/common"
+	"github.com/stretchr/testify/assert"
 	"testing"
 
 	"encoding/hex"
@@ -13,22 +14,19 @@ import (
 	common2 "github.com/polynetwork/poly/native/service/cross_chain_manager/common"
 )
 
-//const (
-//	TestNet = "172.168.3.73"
-//)
+const (
+	LocalNet = "127.0.0.1"
+)
 
 func TestRegisterSideChain(t *testing.T) {
 	sdk := poly_go_sdk.NewPolySdk()
 	pri, _ := oc.HexToBytes("5f2fe68215476abb9852cfa7da31ef00aa1468782d5ca809da5c4e1390b8ee45")
 	signer, _ := poly_go_sdk.NewAccountFromPrivateKey(pri, signature.SHA256withECDSA)
-	//to, _ := oc.AddressFromBase58("ASUwFccvYFrrWR6vsZhhNszLFNvCLA5qS6")
-	sdk.NewWebSocketClient().Connect("ws://138.91.6.125:40335")
-	//sdk.NewWebSocketClient().Connect("ws://192.168.3.144:40335")
-
-	var address = "AQf4Mzu1YJrhz9f3aRkkw9n3qhXGSh4p"
+	sdk.NewWebSocketClient().Connect("ws://" + LocalNet + ":40335")
+	address, _ := oc.AddressFromBase58("AQf4Mzu1YJrhz9f3aRkkw9n3qhXGSh4p")
 	//txHash1, _ := oc.HexToBytes("7575526bc066a3acc6 abb134119cd6d4a9041969")
 
-	txHash, err := sdk.Native.Scm.RegisterSideChain(address, 234, 1, "chain167", 1, signer)
+	txHash, err := sdk.Native.Scm.RegisterSideChain(address, 234, 1, "chain167", 1, []byte{}, signer)
 
 	var results *common.SmartContactEvent
 	//results := &common.SmartContactEvent{}
@@ -51,23 +49,11 @@ func TestRegisterSideChain(t *testing.T) {
 	}
 }
 
-func TestGetMerkleProof(t *testing.T) {
-	sdk := poly_go_sdk.NewPolySdk()
-	sdk.NewWebSocketClient().Connect("ws://138.91.6.125:40335")
-	merkleProof, err := sdk.ClientMgr.GetMerkleProof("2e211bf859b84dc14b2ce3ecfaa95f26ed3b9818c5a4cfeaa77dec8241c51db9")
-
-	if err != nil {
-		fmt.Printf("The error is %+v\n", err)
-	}
-	fmt.Printf("GetMerkleProof is %+v\n ", merkleProof)
-
-}
-
 func TestGetCrossStatesProof(t *testing.T) {
 	sdk := poly_go_sdk.NewPolySdk()
-	sdk.NewRpcClient().SetAddress("http://138.91.6.125:40336")
+	sdk.NewRpcClient().SetAddress("http://" + LocalNet + ":40336")
 	//sdk.NewWebSocketClient().Connect("ws://192.168.3.144:40335")
-	crossStatesProof, err := sdk.ClientMgr.GetCrossStatesProof(1, "k")
+	crossStatesProof, err := sdk.ClientMgr.GetCrossStatesProof(1, "yourKey")
 
 	if err != nil {
 		fmt.Printf("The error is %+v\n", err)
@@ -103,4 +89,18 @@ func Test_DeserializeToMerkleVale(t *testing.T) {
 	fmt.Println("args.AssetAddress is ", hex.EncodeToString(argsAssetAddress))
 	fmt.Println("args.ToAddress is ", hex.EncodeToString(argsToAddress))
 	fmt.Println("args.Value is ", argsValue)
+}
+
+func Test_GetMerkleProof_ThroughWS(t *testing.T) {
+	sdk := poly_go_sdk.NewPolySdk()
+	sdk.NewWebSocketClient().Connect("ws://" + LocalNet + ":40335")
+	_, err := sdk.ClientMgr.GetMerkleProof(1, 8)
+	assert.Nil(t, err)
+}
+
+func Test_GetMerkleProof_ThroughRest(t *testing.T) {
+	sdk := poly_go_sdk.NewPolySdk()
+	sdk.NewRestClient().SetAddress("http://" + LocalNet + ":40334")
+	_, err := sdk.ClientMgr.GetMerkleProof(1, 20)
+	assert.Nil(t, err)
 }

@@ -142,8 +142,8 @@ func (this *RpcClient) getSmartContract(qid, contractAddress string) ([]byte, er
 }
 
 //GetMerkleProof return the merkle proof whether tx is exist in ledger. Param txHash is in hex string code
-func (this *RpcClient) getMerkleProof(qid, txHash string) ([]byte, error) {
-	return this.sendRpcRequest(qid, RPC_GET_MERKLE_PROOF, []interface{}{txHash})
+func (this *RpcClient) getMerkleProof(qid string, blockHeight, rootHeight uint32) ([]byte, error) {
+	return this.sendRpcRequest(qid, RPC_GET_MERKLE_PROOF, []interface{}{blockHeight, rootHeight})
 }
 
 func (this *RpcClient) getCrossStatesProof(qid string, height uint32, key string) ([]byte, error) {

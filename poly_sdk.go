@@ -43,6 +43,7 @@ func init() {
 
 //OntologySdk is the main struct for user
 type PolySdk struct {
+	ChainId uint64
 	client.ClientMgr
 	Native *NativeContract
 }
@@ -53,6 +54,11 @@ func NewPolySdk() *PolySdk {
 	native := newNativeContract(polySdk)
 	polySdk.Native = native
 	return polySdk
+}
+
+func (this *PolySdk) SetChainId(chainId uint64) *PolySdk {
+	this.ChainId = chainId
+	return this
 }
 
 //CreateWallet return a new wallet
@@ -361,7 +367,7 @@ func (this *PolySdk) NewInvokeTransaction(invokeCode []byte) *types.Transaction 
 		Code: invokeCode,
 	}
 	tx := &types.Transaction{
-
+		ChainID: this.ChainId,
 		TxType:  types.Invoke,
 		Nonce:   rand.Uint32(),
 		Payload: invokePayload,

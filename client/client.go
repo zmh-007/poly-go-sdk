@@ -16,6 +16,7 @@ type ClientMgr struct {
 	rest      *RestClient //Rest client used the rest api of ontology
 	ws        *WSClient   //Web socket client used the web socket api of ontology
 	defClient OntologyClient
+	ChainId   uint64
 	qid       uint64
 }
 
@@ -212,12 +213,12 @@ func (this *ClientMgr) GetSmartContractEventByBlock(height uint32) ([]*sdkcom.Sm
 	return utils.GetSmartContactEvents(data)
 }
 
-func (this *ClientMgr) GetMerkleProof(txHash string) (*sdkcom.MerkleProof, error) {
+func (this *ClientMgr) GetMerkleProof(blockHeight, rootHeight uint32) (*sdkcom.MerkleProof, error) {
 	client := this.getClient()
 	if client == nil {
 		return nil, fmt.Errorf("don't have available client of ontology")
 	}
-	data, err := client.getMerkleProof(this.getNextQid(), txHash)
+	data, err := client.getMerkleProof(this.getNextQid(), blockHeight, rootHeight)
 	if err != nil {
 		return nil, err
 	}

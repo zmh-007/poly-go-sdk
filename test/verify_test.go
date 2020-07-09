@@ -9,6 +9,7 @@ import (
 	mcc "github.com/polynetwork/poly/common"
 	"github.com/polynetwork/poly/core/signature"
 	"github.com/polynetwork/poly/core/types"
+	"github.com/polynetwork/poly/merkle"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -24,7 +25,8 @@ func TestVerifyTx(t *testing.T) {
 
 	pri1, _ := mcc.HexToBytes(privateK1)
 	signer, _ := poly_go_sdk.NewAccountFromPrivateKey(pri1, sig.SHA256withECDSA)
-	tx, _ := sdk.Native.Scm.NewRegisterSideChainTransaction(signer.Address.ToBase58(), 234, 2, "chain167", 1)
+
+	tx, _ := sdk.Native.Scm.NewRegisterSideChainTransaction(signer.Address, 234, 2, "chain167", 1, []byte{})
 
 	err := sdk.SignToTransaction(tx, signer)
 
@@ -58,7 +60,7 @@ func TestMultiVerifyTx(t *testing.T) {
 	pri3, _ := mcc.HexToBytes(privateK3)
 	signer3, _ := poly_go_sdk.NewAccountFromPrivateKey(pri3, sig.SHA256withECDSA)
 
-	tx, err := sdk.Native.Scm.NewApproveRegisterSideChainTransaction(112)
+	tx, err := sdk.Native.Scm.NewApproveRegisterSideChainTransaction(112, common.ADDRESS_EMPTY)
 
 	fmt.Println("before serialization, txHash = ", tx.Hash())
 
@@ -107,4 +109,28 @@ func TestMultiVerifyTx(t *testing.T) {
 			fmt.Println("signature ", i, ", ", addr.ToBase58(), ", should be ", multiSigAddr.ToBase58())
 		}
 	}
+}
+
+func Test_GetAndVerify_BlockRootMerkleProof(t *testing.T) {
+	sdk := poly_go_sdk.NewPolySdk()
+	sdk.NewRpcClient().SetAddress("http://" + LocalNet + ":40336")
+	var blockHeightToBeVerified uint32 = 1
+	var blockHeightReliable uint32 = 100
+
+	merkleProof, err := sdk.ClientMgr.GetMerkleProof(blockHeightToBeVerified+1, blockHeightReliable)
+	assert.Nil(t, err)
+	fmt.Printf("GetMerkleProof is %+v\n ", merkleProof)
+	headerToBeVerified, _ := sdk.GetHeaderByHeight(blockHeightToBeVerified)
+	blockHash := headerToBeVerified.Hash()
+	verify := merkle.NewMerkleVerifier()
+	proofHashes := make([]mcc.Uint256, 0, len(merkleProof.TargetHashes))
+	for j := 0; j < len(merkleProof.TargetHashes); j++ {
+		hash, err := mcc.Uint256FromHexString(merkleProof.TargetHashes[j])
+		assert.Nil(t, err)
+		proofHashes = append(proofHashes, hash)
+	}
+	curBlockRoot, _ := mcc.Uint256FromHexString(merkleProof.CurBlockRoot)
+	verifyRes := verify.VerifyLeafHashInclusion(blockHash, blockHeightToBeVerified+1, proofHashes, curBlockRoot, blockHeightReliable+1)
+	assert.Nil(t, verifyRes, "Verify failed")
+
 }
