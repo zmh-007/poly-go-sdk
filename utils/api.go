@@ -173,8 +173,8 @@ func GetMerkleProof(data []byte) (*sdkcom.MerkleProof, error) {
 	return proof, nil
 }
 
-func GetCrossStatesProof(data []byte) (*sdkcom.CrossStatesProof, error) {
-	proof := &sdkcom.CrossStatesProof{}
+func GetCrossStatesProof(data []byte) (*sdkcom.MerkleProof, error) {
+	proof := &sdkcom.MerkleProof{}
 	err := json.Unmarshal(data, proof)
 	if err != nil {
 		return nil, fmt.Errorf("GetCrossStatesProof json.Unmarshal error:%s", err)

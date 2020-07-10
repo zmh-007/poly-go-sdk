@@ -231,15 +231,6 @@ type SmartContractEventLog struct {
 
 //MerkleProof return struct
 type MerkleProof struct {
-	Type           string
-	BlockRoot      string
-	BlockHeight    uint32
-	CurBlockRoot   string
-	CurBlockHeight uint32
-	TargetHashes   []string
-}
-
-type CrossStatesProof struct {
 	Type      string
 	AuditPath string
 }

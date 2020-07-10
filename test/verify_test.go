@@ -1,6 +1,7 @@
 package test
 
 import (
+	"encoding/hex"
 	"fmt"
 	"github.com/ontio/ontology-crypto/keypair"
 	sig "github.com/ontio/ontology-crypto/signature"
@@ -114,23 +115,23 @@ func TestMultiVerifyTx(t *testing.T) {
 func Test_GetAndVerify_BlockRootMerkleProof(t *testing.T) {
 	sdk := poly_go_sdk.NewPolySdk()
 	sdk.NewRpcClient().SetAddress("http://" + LocalNet + ":40336")
-	var blockHeightToBeVerified uint32 = 1
-	var blockHeightReliable uint32 = 100
+	var blockHeightToBeVerified uint32 = 10
+	var blockHeightReliable uint32 = 20
 
-	merkleProof, err := sdk.ClientMgr.GetMerkleProof(blockHeightToBeVerified+1, blockHeightReliable)
+	merkleProof, err := sdk.ClientMgr.GetMerkleProof(blockHeightToBeVerified, blockHeightReliable)
 	assert.Nil(t, err)
 	fmt.Printf("GetMerkleProof is %+v\n ", merkleProof)
-	headerToBeVerified, _ := sdk.GetHeaderByHeight(blockHeightToBeVerified)
-	blockHash := headerToBeVerified.Hash()
-	verify := merkle.NewMerkleVerifier()
-	proofHashes := make([]mcc.Uint256, 0, len(merkleProof.TargetHashes))
-	for j := 0; j < len(merkleProof.TargetHashes); j++ {
-		hash, err := mcc.Uint256FromHexString(merkleProof.TargetHashes[j])
-		assert.Nil(t, err)
-		proofHashes = append(proofHashes, hash)
-	}
-	curBlockRoot, _ := mcc.Uint256FromHexString(merkleProof.CurBlockRoot)
-	verifyRes := verify.VerifyLeafHashInclusion(blockHash, blockHeightToBeVerified+1, proofHashes, curBlockRoot, blockHeightReliable+1)
-	assert.Nil(t, verifyRes, "Verify failed")
 
+	blockHeaderReliable, err := sdk.GetHeaderByHeight(blockHeightReliable)
+	assert.Nil(t, err)
+	blockRootReliable := blockHeaderReliable.BlockRoot
+
+	headerToBeVerified, err := sdk.GetHeaderByHeight(blockHeightToBeVerified)
+	assert.Nil(t, err)
+	blockHashToBeVerified := headerToBeVerified.Hash()
+
+	path, err := hex.DecodeString(merkleProof.AuditPath)
+	val, err := merkle.MerkleProve(path, blockRootReliable.ToArray())
+	assert.Nil(t, err, "Verify failed")
+	assert.Equal(t, blockHashToBeVerified.ToArray(), val)
 }

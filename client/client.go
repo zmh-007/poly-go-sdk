@@ -225,7 +225,7 @@ func (this *ClientMgr) GetMerkleProof(blockHeight, rootHeight uint32) (*sdkcom.M
 	return utils.GetMerkleProof(data)
 }
 
-func (this *ClientMgr) GetCrossStatesProof(height uint32, key string) (*sdkcom.CrossStatesProof, error) {
+func (this *ClientMgr) GetCrossStatesProof(height uint32, key string) (*sdkcom.MerkleProof, error) {
 	client := this.getClient()
 	if client == nil {
 		return nil, fmt.Errorf("don't have available client of ontology")
