@@ -359,7 +359,7 @@ func (this *PolySdk) GetPrivateKeyFromMnemonicCodesStrBip44(mnemonicCodesStr str
 }
 
 //NewInvokeTransaction return smart contract invoke transaction
-func (this *PolySdk) NewInvokeTransaction(invokeCode []byte) *types.Transaction {
+func (this *PolySdk) NewInvokeTransaction(invokeCode []byte) (*types.Transaction, error) {
 	invokePayload := &payload.InvokeCode{
 		Code: invokeCode,
 	}
@@ -371,12 +371,14 @@ func (this *PolySdk) NewInvokeTransaction(invokeCode []byte) *types.Transaction 
 		Sigs:    make([]types.Sig, 0, 0),
 	}
 	sink := common.NewZeroCopySink(nil)
-	err := tx.Serialization(sink)
-	if err != nil {
-		return &types.Transaction{}
+	if err := tx.Serialization(sink); err != nil {
+		return nil, fmt.Errorf("NewInvokeTransaction, Transaction.Serialization error: %v", err)
 	}
-	tx, err = types.TransactionFromRawBytes(sink.Bytes())
-	return tx
+	tx, err := types.TransactionFromRawBytes(sink.Bytes())
+	if err != nil {
+		return nil, fmt.Errorf("NewInvokeTransaction, TransactionFromRawBytes error: %v", err)
+	}
+	return tx, nil
 }
 
 func (this *PolySdk) SignToTransaction(tx *types.Transaction, signer Signer) error {

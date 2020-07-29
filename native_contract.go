@@ -78,7 +78,7 @@ func (this *NativeContract) NewNativeInvokeTransaction(
 	invokeCode := new(common.ZeroCopySink)
 	contractInvokeParam.Serialization(invokeCode)
 
-	return this.mcSdk.NewInvokeTransaction(invokeCode.Bytes()), nil
+	return this.mcSdk.NewInvokeTransaction(invokeCode.Bytes())
 }
 
 func (this *NativeContract) PreExecInvokeNativeContract(
@@ -279,10 +279,6 @@ func (this *HeaderSync) SyncGenesisHeader(chainId uint64, genesisHeader []byte, 
 		if err != nil {
 			return common.UINT256_EMPTY, fmt.Errorf("multi sign failed, err: %s", err)
 		}
-	}
-
-	if err != nil {
-		return common.UINT256_EMPTY, err
 	}
 	return this.mcSdk.SendTransaction(tx)
 }
