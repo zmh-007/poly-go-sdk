@@ -515,7 +515,7 @@ func (this *SideChainManager) NewApproveQuitSideChainTransaction(chainId uint64,
 		sink.Bytes())
 }
 func (this *SideChainManager) ApproveQuitSideChain(chainId uint64, signer *Account) (common.Uint256, error) {
-	tx, err := this.NewQuitSideChainTransaction(chainId, signer.Address)
+	tx, err := this.NewApproveQuitSideChainTransaction(chainId, signer.Address)
 	if err != nil {
 		return common.UINT256_EMPTY, err
 	}
