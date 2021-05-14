@@ -24,6 +24,7 @@ import (
 	"github.com/polynetwork/poly/core/types"
 	ccm "github.com/polynetwork/poly/native/service/cross_chain_manager"
 	nccmc "github.com/polynetwork/poly/native/service/cross_chain_manager/common"
+	"github.com/polynetwork/poly/native/service/governance/neo3_state_manager"
 	"github.com/polynetwork/poly/native/service/governance/node_manager"
 	"github.com/polynetwork/poly/native/service/governance/relayer_manager"
 	"github.com/polynetwork/poly/native/service/governance/side_chain_manager"
@@ -39,6 +40,7 @@ var (
 	SideChainManagerContractAddress  = mcnsu.SideChainManagerContractAddress
 	NodeManagerContractAddress       = mcnsu.NodeManagerContractAddress
 	RelayerManagerContractAddress    = mcnsu.RelayerManagerContractAddress
+	Neo3StateManagerContractAddress  = mcnsu.Neo3StateManagerContractAddress
 )
 
 var (
@@ -55,6 +57,7 @@ type NativeContract struct {
 	Scm   *SideChainManager
 	Nm    *NodeManager
 	Rm    *RelayerManager
+	Sm    *StateManager
 }
 
 func newNativeContract(mcSdk *PolySdk) *NativeContract {
@@ -64,6 +67,7 @@ func newNativeContract(mcSdk *PolySdk) *NativeContract {
 	native.Scm = &SideChainManager{native: native, mcSdk: mcSdk}
 	native.Nm = &NodeManager{native: native, mcSdk: mcSdk}
 	native.Rm = &RelayerManager{native: native, mcSdk: mcSdk}
+	native.Sm = &StateManager{native: native, mcSdk: mcSdk}
 	return native
 }
 
@@ -369,6 +373,7 @@ func (this *SideChainManager) NewRegisterSideChainTransaction(address common.Add
 		side_chain_manager.REGISTER_SIDE_CHAIN,
 		sink.Bytes())
 }
+
 func (this *SideChainManager) RegisterSideChain(address common.Address, chainId, router uint64, name string,
 	blocksToWait uint64, CMCCAddress []byte, signer *Account) (common.Uint256, error) {
 	tx, err := this.NewRegisterSideChainTransaction(address, chainId, router, name, blocksToWait, CMCCAddress)
@@ -397,6 +402,7 @@ func (this *SideChainManager) NewApproveRegisterSideChainTransaction(chainId uin
 		side_chain_manager.APPROVE_REGISTER_SIDE_CHAIN,
 		sink.Bytes())
 }
+
 func (this *SideChainManager) ApproveRegisterSideChain(chainId uint64, signer *Account) (common.Uint256, error) {
 	tx, err := this.NewApproveRegisterSideChainTransaction(chainId, signer.Address)
 	if err != nil {
@@ -956,8 +962,124 @@ func (this *RelayerManager) ApproveRemoveRelayer(removeID uint64, signer *Accoun
 	return this.mcSdk.SendTransaction(tx)
 }
 
-func (this *NodeManager) NewCommitDposTransaction() (*types.Transaction, error) {
+type StateManager struct {
+	mcSdk  *PolySdk
+	native *NativeContract
+}
 
+func (this *StateManager) NewRegisterStateValidatorTransaction(pubKeys []string, address common.Address) (*types.Transaction, error) {
+	state := &neo3_state_manager.StateValidatorListParam{
+		StateValidators: pubKeys,
+		Address:         address,
+	}
+
+	sink := new(common.ZeroCopySink)
+	state.Serialization(sink)
+
+	return this.native.NewNativeInvokeTransaction(
+		TX_VERSION,
+		Neo3StateManagerContractAddress,
+		neo3_state_manager.REGISTER_STATE_VALIDATOR,
+		sink.Bytes())
+}
+
+func (this *StateManager) RegisterStateValidator(pubKeys []string, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewRegisterStateValidatorTransaction(pubKeys, signer.Address)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	err = this.mcSdk.SignToTransaction(tx, signer)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	return this.mcSdk.SendTransaction(tx)
+}
+
+func (this *StateManager) NewApproveRegisterStateValidatorTransaction(applyID uint64, address common.Address) (*types.Transaction, error) {
+	state := &neo3_state_manager.ApproveStateValidatorParam{
+		ID:      applyID,
+		Address: address,
+	}
+
+	sink := new(common.ZeroCopySink)
+	state.Serialization(sink)
+
+	return this.native.NewNativeInvokeTransaction(
+		TX_VERSION,
+		Neo3StateManagerContractAddress,
+		neo3_state_manager.APPROVE_REGISTER_STATE_VALIDATOR,
+		sink.Bytes())
+}
+
+func (this *StateManager) ApproveRegisterStateValidator(applyID uint64, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewApproveRegisterStateValidatorTransaction(applyID, signer.Address)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	err = this.mcSdk.SignToTransaction(tx, signer)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	return this.mcSdk.SendTransaction(tx)
+}
+
+func (this *StateManager) NewRemoveStateValidatorTransaction(pubKeys []string, address common.Address) (*types.Transaction, error) {
+	state := &neo3_state_manager.StateValidatorListParam{
+		StateValidators: pubKeys,
+		Address:     address,
+	}
+
+	sink := new(common.ZeroCopySink)
+	state.Serialization(sink)
+
+	return this.native.NewNativeInvokeTransaction(
+		TX_VERSION,
+		Neo3StateManagerContractAddress,
+		neo3_state_manager.REMOVE_STATE_VALIDATOR,
+		sink.Bytes())
+}
+
+func (this *StateManager) RemoveStateValidator(pubKeys []string, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewRemoveStateValidatorTransaction(pubKeys, signer.Address)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	err = this.mcSdk.SignToTransaction(tx, signer)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	return this.mcSdk.SendTransaction(tx)
+}
+
+func (this *StateManager) NewApproveRemoveStateValidatorTransaction(removeID uint64, address common.Address) (*types.Transaction, error) {
+	state := &neo3_state_manager.ApproveStateValidatorParam{
+		ID:      removeID,
+		Address: address,
+	}
+
+	sink := new(common.ZeroCopySink)
+	state.Serialization(sink)
+
+	return this.native.NewNativeInvokeTransaction(
+		TX_VERSION,
+		Neo3StateManagerContractAddress,
+		neo3_state_manager.APPROVE_REMOVE_STATE_VALIDATOR,
+		sink.Bytes())
+}
+
+func (this *StateManager) ApproveRemoveStateValidator(removeID uint64, signer *Account) (common.Uint256, error) {
+	tx, err := this.NewApproveRemoveStateValidatorTransaction(removeID, signer.Address)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	err = this.mcSdk.SignToTransaction(tx, signer)
+	if err != nil {
+		return common.UINT256_EMPTY, err
+	}
+	return this.mcSdk.SendTransaction(tx)
+}
+
+func (this *NodeManager) NewCommitDposTransaction() (*types.Transaction, error) {
 	return this.native.NewNativeInvokeTransaction(
 		TX_VERSION,
 		NodeManagerContractAddress,
