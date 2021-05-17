@@ -18,6 +18,7 @@ package poly_go_sdk
 
 import (
 	"fmt"
+
 	"github.com/ontio/ontology-crypto/keypair"
 	sdkcom "github.com/polynetwork/poly-go-sdk/common"
 	"github.com/polynetwork/poly/common"
@@ -430,6 +431,7 @@ func (this *SideChainManager) NewUpdateSideChainTransaction(address common.Addre
 	blocksToWait uint64, CMCCAddress []byte) (*types.Transaction, error) {
 	return this.NewUpdateSideChainTransactionExt(address, chainId, router, name, blocksToWait, CMCCAddress, nil)
 }
+
 func (this *SideChainManager) NewUpdateSideChainTransactionExt(address common.Address, chainId, router uint64, name string,
 	blocksToWait uint64, CMCCAddress []byte, extraInfo []byte) (*types.Transaction, error) {
 	state := &side_chain_manager.RegisterSideChainParam{
@@ -467,6 +469,7 @@ func (this *SideChainManager) UpdateSideChainExt(address common.Address, chainId
 	}
 	return this.mcSdk.SendTransaction(tx)
 }
+
 func (this *SideChainManager) UpdateSideChain(address common.Address, chainId, router uint64, name string,
 	blocksToWait uint64, CMCCAddress []byte, signer *Account) (common.Uint256, error) {
 	return this.UpdateSideChainExt(address, chainId, router, name, blocksToWait, CMCCAddress, nil, signer)

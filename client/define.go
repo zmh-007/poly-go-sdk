@@ -18,8 +18,9 @@ package client
 
 import (
 	"encoding/json"
-	"github.com/polynetwork/poly/core/types"
 	"time"
+
+	"github.com/polynetwork/poly/core/types"
 )
 
 type OntologyClient interface {
@@ -40,6 +41,7 @@ type OntologyClient interface {
 	getStorage(qid, contractAddress string, key []byte) ([]byte, error)
 	getMerkleProof(qid string, blockHeight, rootHeight uint32) ([]byte, error)
 	getCrossStatesProof(qid string, height uint32, key string) ([]byte, error)
+	getStateMerkleRoot(qid string, height uint32) ([]byte, error)
 	getHeaderByHeight(qid string, height uint32) ([]byte, error)
 	getMemPoolTxState(qid, txHash string) ([]byte, error)
 	getMemPoolTxCount(qid string) ([]byte, error)
@@ -62,6 +64,7 @@ const (
 	RPC_GET_MERKLE_PROOF         = "getmerkleproof"
 	RPC_GET_CROSS_STATES_PROOF   = "getcrossstatesproof"
 	RPC_GET_HEADER_BY_HEIGHT     = "getheaderbyheight"
+	RPC_GET_STATE_MERKLE_ROOT    = "getstatemerkleroot"
 
 	RPC_GET_NETWORK_ID              = "getnetworkid"
 	RPC_GET_MEM_POOL_TX_COUNT       = "getmempooltxcount"

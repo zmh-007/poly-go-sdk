@@ -20,14 +20,15 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	sdkcom "github.com/polynetwork/poly-go-sdk/common"
-	"github.com/polynetwork/poly-go-sdk/utils"
-	"github.com/polynetwork/poly/common"
-	"github.com/polynetwork/poly/core/types"
 	"math/rand"
 	"strconv"
 	"sync"
 	"time"
+
+	sdkcom "github.com/polynetwork/poly-go-sdk/common"
+	"github.com/polynetwork/poly-go-sdk/utils"
+	"github.com/polynetwork/poly/common"
+	"github.com/polynetwork/poly/core/types"
 )
 
 type WSSubscribeStatus struct {
@@ -669,6 +670,10 @@ func (this *WSClient) getCrossStatesProof(qid string, height uint32, key string)
 
 func (this *WSClient) getHeaderByHeight(qid string, height uint32) ([]byte, error) {
 	return nil, fmt.Errorf("Does not support GetHeaderByHeight for websocket")
+}
+
+func (this WSClient) getStateMerkleRoot(qid string, height uint32) ([]byte, error) {
+	return nil, fmt.Errorf("Does not support getStateMerkleRoot for websocket")
 }
 
 func (this *WSClient) getSmartContractEvent(qid, txHash string) ([]byte, error) {

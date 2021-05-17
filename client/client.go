@@ -19,12 +19,13 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"sync/atomic"
+	"time"
+
 	sdkcom "github.com/polynetwork/poly-go-sdk/common"
 	"github.com/polynetwork/poly-go-sdk/utils"
 	"github.com/polynetwork/poly/common"
 	"github.com/polynetwork/poly/core/types"
-	"sync/atomic"
-	"time"
 )
 
 type ClientMgr struct {
@@ -264,6 +265,19 @@ func (this *ClientMgr) GetHeaderByHeight(height uint32) (*types.Header, error) {
 	}
 	return utils.GetHeader(data)
 
+}
+
+func (this *ClientMgr) GetStateMerkleRoot(height uint32) (hex string, err error) {
+	client := this.getClient()
+	if client == nil {
+		return "", fmt.Errorf("don't have available client of ORChain")
+	}
+	root, err := client.getStateMerkleRoot(this.getNextQid(), height)
+	if err != nil {
+		return "", err
+	}
+	err = json.Unmarshal(root, &hex)
+	return
 }
 
 func (this *ClientMgr) GetMemPoolTxState(txHash string) (*sdkcom.MemPoolTxState, error) {

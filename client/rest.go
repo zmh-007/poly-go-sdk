@@ -21,15 +21,16 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/polynetwork/poly-go-sdk/utils"
-	"github.com/polynetwork/poly/common"
-	"github.com/polynetwork/poly/core/types"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/polynetwork/poly-go-sdk/utils"
+	"github.com/polynetwork/poly/common"
+	"github.com/polynetwork/poly/core/types"
 )
 
 //RpcClient for ontology rpc api
@@ -160,6 +161,10 @@ func (this RestClient) getCrossStatesProof(qid string, height uint32, key string
 
 func (this RestClient) getHeaderByHeight(qid string, height uint32) ([]byte, error) {
 	return nil, fmt.Errorf("Does not support GetHeaderByHeight for websocket")
+}
+
+func (this RestClient) getStateMerkleRoot(qid string, height uint32) ([]byte, error) {
+	return nil, fmt.Errorf("Does not support getStateMerkleRoot for rest")
 }
 
 func (this *RestClient) getMemPoolTxState(qid, txHash string) ([]byte, error) {
